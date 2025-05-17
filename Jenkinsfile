@@ -15,6 +15,21 @@ pipeline {
         }
     }
 
+    stage('Test') {
+            steps {
+                echo 'Running Mocha tests'
+                script {
+                    sh 'npm test'
+                }
+            }
+
+            post {
+                always {
+                    echo 'Test stage cleanup'
+                }
+            }
+    }
+
     post {
         always {
             sh 'docker-compose -f docker-compose.staging.yml down || true'
