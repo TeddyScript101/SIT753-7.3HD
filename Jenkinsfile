@@ -22,7 +22,6 @@ pipeline {
             steps {
                 echo 'Running Mocha tests'
                 script {
-                    //todo: write more test
                     sh 'npm test'
                 }
             }
@@ -30,6 +29,14 @@ pipeline {
             post {
                 always {
                     echo 'Test stage cleanup'
+                }
+            }
+        }
+        stage('Security') {
+            steps {
+                echo 'Running security scan'
+                script {
+                    sh 'npm audit'
                 }
             }
         }
