@@ -1,13 +1,12 @@
 const cookieParser = require('cookie-parser');
 const express = require('express');
 const path = require('path');
-const connectDB = require('./db');
 const routes = require('./routes');
 const cors = require('cors');
 const http = require('http'); // Needed to create server for Socket.IO
 const socketIo = require('socket.io');
 const validateEnv = require('./helpers/validateEnv');
-validateEnv();
+// validateEnv();
 
 const app = express();
 const port = 3000;
