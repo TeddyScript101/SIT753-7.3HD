@@ -5,8 +5,8 @@ pipeline {
         NODE_ENV = 'staging'
         MONGO_URI = 'mongodb://host.docker.internal:27017/dummy'
         JWT_SECRET = 'default_secret'
-        IMAGE_NAME = 'SIT753-staging'
-        CONTAINER_NAME = 'SIT753-container'
+        IMAGE_NAME = 'sit753-staging'
+        CONTAINER_NAME = 'sit753-container'
     }
 
     stages {
@@ -35,7 +35,6 @@ pipeline {
         }
         stage('Deploy') {
             steps {
-                input message: 'Deploy to staging?', ok: 'Proceed'
                 echo 'Deploying to staging environment...'
 
                 script {
