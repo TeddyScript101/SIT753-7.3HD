@@ -4,7 +4,7 @@ pipeline {
     environment {
         NODE_ENV = 'staging'
         MONGO_URI = 'mongodb://localhost:27017/dummy'
-        JWT_SECRET = default_secret
+        JWT_SECRET = 'default_secret'
     }
 
     stages {
