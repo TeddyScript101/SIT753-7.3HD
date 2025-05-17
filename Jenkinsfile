@@ -13,9 +13,8 @@ pipeline {
                 archiveArtifacts artifacts: 'package.json,package-lock.json,dist/**'
             }
         }
-    }
 
-    stage('Test') {
+        stage('Test') {
             steps {
                 echo 'Running Mocha tests'
                 script {
@@ -28,6 +27,7 @@ pipeline {
                     echo 'Test stage cleanup'
                 }
             }
+        }
     }
 
     post {
