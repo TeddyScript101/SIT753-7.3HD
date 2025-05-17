@@ -32,7 +32,7 @@ pipeline {
 
     post {
         always {
-            sh 'docker-compose -f docker-compose.staging.yml down || true'
+            sh 'docker compose -f docker-compose.staging.yml down || true'
         }
     }
 }
