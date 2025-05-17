@@ -10,7 +10,6 @@ pipeline {
             steps {
                 echo 'Start Building'
                 sh 'npm install'
-                sh 'npm run build'
                 archiveArtifacts artifacts: 'package.json,package-lock.json,dist/**'
             }
         }
