@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         NODE_ENV = 'staging'
-        MONGO_URI = 'mongodb://localhost:27017/dummy'
+        MONGO_URI = 'mongodb://mongo:27017/dummy'
         JWT_SECRET = 'default_secret'
     }
 
