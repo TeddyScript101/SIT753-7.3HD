@@ -5,6 +5,8 @@ pipeline {
         NODE_ENV = 'staging'
         MONGO_URI = 'mongodb://host.docker.internal:27017/dummy'
         JWT_SECRET = 'default_secret'
+        IMAGE_NAME = 'SIT753-staging'
+        CONTAINER_NAME = 'SIT753-container'
     }
 
     stages {
@@ -31,11 +33,26 @@ pipeline {
                 }
             }
         }
-        stage('Check Docker') {
+        stage('Deploy') {
             steps {
-                echo 'Checking if Docker is installed...'
-                sh 'docker --version'
+                input message: 'Deploy to staging?', ok: 'Proceed'
+                echo 'Deploying to staging environment...'
+
+                script {
+                    sh '''
+                        docker rm -f $CONTAINER_NAME || true
+                        docker build -t $IMAGE_NAME .
+                        docker run -d \
+                            --name $CONTAINER_NAME \
+                            -e NODE_ENV=$NODE_ENV \
+                            -e MONGO_URI=$MONGO_URI \
+                            -e JWT_SECRET=$JWT_SECRET \
+                            -p 3000:3000 \
+                            $IMAGE_NAME
+                    '''
+                }
             }
         }
     }
 }
+
