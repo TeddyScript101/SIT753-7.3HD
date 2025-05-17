@@ -20,6 +20,7 @@ pipeline {
             steps {
                 echo 'Running Mocha tests'
                 script {
+                    //todo: write more test
                     sh 'npm test'
                 }
             }
@@ -28,6 +29,12 @@ pipeline {
                 always {
                     echo 'Test stage cleanup'
                 }
+            }
+        }
+        stage('Check Docker') {
+            steps {
+                echo 'Checking if Docker is installed...'
+                sh 'docker --version'
             }
         }
     }
