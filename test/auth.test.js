@@ -13,7 +13,8 @@ describe('Auth Integration Tests', function () {
         mongoServer = await MongoMemoryServer.create(
             {
                 binary: {
-                    version: '6.0.8'
+                    version: '7.0.3',
+                    arch: 'x64'
                 }
             }
         );
