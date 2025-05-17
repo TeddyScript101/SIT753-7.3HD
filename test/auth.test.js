@@ -11,7 +11,7 @@ describe('Auth Integration Tests', function () {
 
     before(async function () {
         mongoServer = await MongoMemoryServer.create();
-        const uri = mongoServer.getUri({ binary: { version: '7.0.14' } });
+        const uri = mongoServer.getUri({ binary: { version: '8.0.8' } });
         await mongoose.connect(uri, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
