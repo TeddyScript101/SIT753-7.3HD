@@ -1,0 +1,198 @@
+<%- include('../components/header', { title: 'Sign Up' , user }) %>
+    <style>
+        /* Main Container Styles */
+        .form-container {
+            max-width: 400px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-container h2 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+
+        /* Form Elements */
+        #signup-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .text-main {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 16px;
+            background: white;
+            box-sizing: border-box;
+            transition: border 0.3s ease;
+            color: #333;
+        }
+
+        .text-main:hover {
+            text-decoration: underline;
+        }
+
+        /* Button */
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            background-color: #4285F4;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            text-align: center;
+        }
+
+        .btn-primary:hover {
+            background-color: #3367D6;
+        }
+
+        /* Error Message */
+        #error {
+            display: none;
+            padding: 12px;
+            margin-bottom: 1rem;
+            background-color: #fce8e6;
+            color: #d32f2f;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        /* OTP Modal */
+        #otp-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+            width: 90%;
+            max-width: 320px;
+            text-align: center;
+        }
+
+        .modal-content h4 {
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+
+        #otp {
+            width: 100%;
+            max-width: 260px;
+            padding: 12px;
+            margin: 0 auto 1.5rem auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 16px;
+            text-align: center;
+            box-sizing: border-box;
+            background: white;
+        }
+
+        #otp:focus {
+            outline: none;
+            border-color: #4285F4;
+            box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+        }
+
+        /* Modal Buttons */
+        #submit-otp,
+        #resend-otp {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            text-align: center;
+            display: inline-block;
+            line-height: 1.5;
+        }
+
+        #submit-otp {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        #submit-otp:hover {
+            background-color: #43A047;
+        }
+
+        #resend-otp {
+            background-color: #4285F4;
+            color: white;
+        }
+
+        #resend-otp:hover {
+            background-color: #3367D6;
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+
+    <div class="form-container">
+        <h2>Sign Up</h2>
+        <p id="error" class="error"></p>
+        <%- include('../components/spinner') %>
+            <form id="signup-form">
+                <input type="text" name="name" placeholder="Name" class="text-main" required />
+                <input type="email" name="email" placeholder="Email" class="text-main" required />
+                <input type="password" name="password" placeholder="Password" class="text-main" required />
+                <button type="submit" class="btn-primary">📝 Create Account</button>
+            </form>
+
+            <p style="text-align: center; margin-top: 1.5rem;">
+                Already have an account? <a href="/login" class="text-main">Log In</a>
+            </p>
+    </div>
+
+    <!-- OTP Modal -->
+    <div id="otp-modal">
+        <div class="modal-content">
+            <h4>Enter OTP</h4>
+            <input type="text" id="otp" placeholder="Enter 6-digit OTP" maxlength="6" />
+            <button id="submit-otp" class="btn">Submit OTP</button>
+            <button id="resend-otp" class="btn">Resend OTP</button>
+        </div>
+    </div>
+
+    <script src="/js/signup.js"></script>
+
+    <%- include('../components/footer') %>

@@ -1,0 +1,46 @@
+<%- include('../components/header', { title: 'User Settings' , user }) %>
+
+    <div class="container" style="max-width: 600px; margin-top: 40px; padding-bottom: 80px;">
+        <h2>User Settings</h2>
+        <form action="/api/users/settings" method="POST" enctype="multipart/form-data">
+
+            <div class="form-group">
+                <label for="name">Username</label>
+                <input type="text" class="form-control" id="name" name="name" value="<%= user.name %>" required />
+            </div>
+
+            <div class="form-group mt-3">
+                <label>Current Avam tar</label><br />
+                <% if (user.avatar) { %>
+                    <img src="<%= user.avatar %>" alt="avatar" width="100" class="rounded-circle mb-2" />
+
+                    <div class="form-group mt-2">
+                        <label>
+                            <input type="checkbox" name="removeAvatar" />
+                            <span>Remove current avatar</span>
+                        </label>
+                    </div>
+                    <% } else { %>
+                        <p>No avatar uploaded</p>
+                        <% } %>
+                            <input type="file" class="form-control" name="avatar" accept="image/*" />
+            </div>
+
+
+            <div class="form-group mt-3">
+                <label for="password">New Password</label>
+                <input type="password" class="form-control" id="password" name="password"
+                    placeholder="Enter new password" />
+            </div>
+
+            <div class="form-group mt-2">
+                <label for="confirmPassword">Confirm New Password</label>
+                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword"
+                    placeholder="Confirm new password" />
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-4">Update Settings</button>
+        </form>
+    </div>
+
+    <%- include('../components/footer') %>

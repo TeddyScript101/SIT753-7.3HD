@@ -1,0 +1,45 @@
+<%- include('components/header', { title, user }) %>
+
+  <section style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <h2 style="text-align: center; margin-bottom: 30px; color: #333;">Simple Calculator</h2>
+
+    <div id="simple-calculator" class="row valign-wrapper"
+      style="background: #f5f5f5; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+      <div class="input-field col s3">
+        <input type="number" id="num1" class="validate" placeholder="First Number">
+      </div>
+
+      <div class="input-field col s2">
+        <select id="operation" class="browser-default">
+          <option value="+" selected>+</option>
+          <option value="-">−</option>
+          <option value="*">×</option>
+          <option value="/">÷</option>
+        </select>
+      </div>
+
+      <div class="input-field col s3">
+        <input type="number" id="num2" class="validate" placeholder="Second Number">
+      </div>
+
+      <div class="col s2">
+        <a id="calculate-btn" class="waves-effect waves-light btn">=</a>
+      </div>
+
+      <div class="col s2">
+        <span id="result" style="font-weight: bold; font-size: 18px;">--</span>
+      </div>
+    </div>
+  </section>
+
+  <script>
+
+    document.addEventListener('DOMContentLoaded', function () {
+      var elems = document.querySelectorAll('select');
+      var instances = M.FormSelect.init(elems);
+    });
+  </script>
+
+  <script src="/js/calculator.js"></script>
+
+  <%- include('components/footer') %>

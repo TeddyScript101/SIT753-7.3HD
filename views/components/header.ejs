@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+        <%= title %>
+    </title>
+
+    <link rel="stylesheet" href="/css/styles.css" />
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet" />
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <style>
+        .avatar-circle {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 40px;
+            height: 40px;
+            background-color: #546e7a;
+            border-radius: 50%;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .container {
+            height: 100%;
+        }
+    </style>
+</head>
+
+
+<nav class="pink-red-main">
+    <div class="nav-wrapper container">
+        <a href="/" class="brand-logo">Giftzy</a>
+        <a href="#" data-target="mobile-nav" class="sidenav-trigger">
+            <i class="material-icons">menu</i>
+        </a>
+        <ul class="right hide-on-med-and-down">
+            <li><a href="/">Home</a></li>
+
+            <% if (user) { %>
+
+                <li>
+                    <a class="dropdown-trigger" href="#" data-target="user-dropdown" data-position="bottom">
+                        <% if (user.avatar!==null) { %>
+                            <!-- <img src="/uploads/<%= user.avatar %>" alt="Avatar" class="circle responsive-img" -->
+                            <img src="<%= user.avatar %>" alt="Avatar" class="circle responsive-img"
+                                style="width: 40px; height: 40px; vertical-align: middle;">
+
+                            <% } else { %>
+                                <div class="avatar-circle">
+                                    <%= user.name.charAt(0).toUpperCase() %>
+                                </div>
+                                <% } %>
+                    </a>
+                </li>
+                <% } else { %>
+                    <li><a href="/login">Login</a></li>
+                    <li><a href="/signup">Sign Up</a></li>
+                    <% } %>
+
+        </ul>
+    </div>
+</nav>
+
+<ul class="sidenav" id="mobile-nav">
+    <li><a href="/">Home</a></li>
+    <% if (user) { %>
+        <li><a href="/settings">Settings</a></li>
+        <li><a href="/api/users/logout">Logout</a></li>
+        <% } else { %>
+            <li><a href="/login">Login</a></li>
+            <li><a href="/signup">Sign Up</a></li>
+            <% } %>
+</ul>
+
+<ul id="user-dropdown" class="dropdown-content">
+    <li><a href="/settings" style="color:#dc5d3b;"><i class="material-icons">settings</i>Settings</a></li>
+    <li class="divider" tabindex="-1"></li>
+    <li><a href="/api/users/logout" style="color:#dc5d3b;"><i class="material-icons">exit_to_app</i>Logout</a></li>
+</ul>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        M.Sidenav.init(document.querySelectorAll('.sidenav'));
+        M.Dropdown.init(document.querySelectorAll('.dropdown-trigger'), {
+            constrainWidth: false,
+            coverTrigger: false
+        });
+        M.Tooltip.init(document.querySelectorAll('.tooltipped'));
+    });
+</script>
+
+<main class="container" style="margin-top: 2rem; margin-bottom: 2rem; min-height: 600px;">
