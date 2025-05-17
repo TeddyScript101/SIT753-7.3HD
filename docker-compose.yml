@@ -6,7 +6,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - MONGO_URI=mongodb://localhost:27017/myapp_test
+      - MONGO_URI=mongodb://localhost:27017/dummy
       - NODE_ENV=staging
       - JWT_SECRET=default_secret
     depends_on:

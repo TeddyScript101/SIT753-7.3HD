@@ -6,21 +6,19 @@ const { app } = require('../server');
 const { User } = require('../models');
 
 describe('Auth Integration Tests', function () {
-    this.timeout(30000);
-
     before(async function () {
-        const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/dummy';
-        try {
-            await mongoose.connect(mongoUri);
-            console.log('Connected to MongoDB for tests');
-        } catch (err) {
-            console.error('Error connecting to MongoDB:', err);
-            throw err;
-        }
+        await mongoose.connect(process.env.MONGO_URI, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        });
     });
 
     after(async function () {
         await mongoose.disconnect();
+    });
+
+    afterEach(async function () {
+        await User.deleteMany({});
     });
 
     describe('POST /api/users/signup', function () {
