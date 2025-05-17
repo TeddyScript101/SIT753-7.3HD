@@ -8,16 +8,23 @@ const { User } = require('../models');
 
 describe('Auth Integration Tests', function () {
     let mongoServer;
-
+    this.timeout(120000);
     before(async function () {
         mongoServer = await MongoMemoryServer.create(
             {
                 binary: {
                     version: '7.0.3',
-                    arch: 'x64'
-                }
-            }
-        );
+                    arch: 'x64',
+                    downloadDir: '/tmp/mongodb-memory-server'
+                },
+                instance: {
+                    port: 27018, // Use alternative port
+                    dbName: 'jest',
+                    storageEngine: 'wiredTiger'
+                },
+                autoStart: false
+            });
+
         const uri = mongoServer.getUri();
         await mongoose.connect(uri, {
             useNewUrlParser: true,
