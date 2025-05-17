@@ -10,7 +10,13 @@ describe('Auth Integration Tests', function () {
     let mongoServer;
 
     before(async function () {
-        mongoServer = await MongoMemoryServer.create();
+        mongoServer = await MongoMemoryServer.create(
+            {
+                binary: {
+                    version: '6.0.8'
+                }
+            }
+        );
         const uri = mongoServer.getUri();
         await mongoose.connect(uri, {
             useNewUrlParser: true,
