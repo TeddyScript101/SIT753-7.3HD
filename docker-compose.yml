@@ -6,7 +6,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - MONGO_URI=mongodb://mongo:27017/SIT725GroupProject
+      - MONGO_URI=mongodb://localhost:27017/myapp_test
       - NODE_ENV=staging
       - JWT_SECRET=default_secret
     depends_on:
@@ -14,8 +14,8 @@ services:
     networks:
       - app-network
     volumes:
-      - .:/usr/src/app:delegated  # Mount source code
-      - /usr/src/app/node_modules  # Anonymous volume to prevent host node_modules conflict
+      - .:/usr/src/app:delegated
+      - /usr/src/app/node_modules
     restart: always
 
   mongo:

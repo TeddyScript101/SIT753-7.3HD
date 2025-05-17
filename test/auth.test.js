@@ -1,18 +1,13 @@
 const request = require('supertest');
 const { expect } = require('chai');
 const mongoose = require('mongoose');
-const { MongoMemoryServer } = require('mongodb-memory-server');
 
 const { app } = require('../server');
 const { User } = require('../models');
 
 describe('Auth Integration Tests', function () {
-    let mongoServer;
-
     before(async function () {
-        mongoServer = await MongoMemoryServer.create();
-        const uri = mongoServer.getUri({ binary: { version: '8.0.8' } });
-        await mongoose.connect(uri, {
+        await mongoose.connect(process.env.MONGO_URI, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
         });
@@ -20,7 +15,6 @@ describe('Auth Integration Tests', function () {
 
     after(async function () {
         await mongoose.disconnect();
-        await mongoServer.stop();
     });
 
     afterEach(async function () {
