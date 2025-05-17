@@ -11,14 +11,17 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Start Building'
-                sh 'docker-compose build'
+                sh 'npm install'
+                archiveArtifacts artifacts: 'package.json,package-lock.json,dist/**'
             }
         }
 
         stage('Test') {
             steps {
                 echo 'Running Mocha tests'
-                sh 'docker-compose run --rm app npm test'
+                script {
+                    sh 'npm test'
+                }
             }
 
             post {
