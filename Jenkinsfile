@@ -142,25 +142,28 @@ pipeline {
             steps {
                 echo 'Deploying Netdata Monitoring Stack...'
                 script {
-                    sh '''
-                        docker rm -f netdata || true
-                        docker ps -aq --filter "name=netdata" | xargs --no-run-if-empty docker rm -f
-                        docker run -d \
-                          --name=netdata \
-                          -p 19999:19999 \
-                          -v netdataconfig:/etc/netdata \
-                          -v netdatalib:/var/lib/netdata \
-                          -v netdatacache:/var/cache/netdata \
-                          -v /etc/passwd:/host/etc/passwd:ro \
-                          -v /etc/group:/host/etc/group:ro \
-                          -v /proc:/host/proc:ro \
-                          -v /sys:/host/sys:ro \
-                          -v /etc/os-release:/host/etc/os-release:ro \
-                          -v /var/run/docker.sock:/var/run/docker.sock:ro \
-                          --cap-add SYS_PTRACE \
-                          --security-opt apparmor=unconfined \
-                          netdata/netdata
-                    '''
+                    def timestamp = new Date().format('yyyyMMdd-HHmmss', TimeZone.getTimeZone('UTC'))
+                    def netdataContainerName = "netdata-${timestamp}"
+
+                    // Clean up any old containers (optional, but recommended)
+                    sh "docker rm -f ${netdataContainerName} || true"
+                    sh """
+                docker run -d \
+                  --name=${netdataContainerName} \
+                  -p 19999:19999 \
+                  -v netdataconfig:/etc/netdata \
+                  -v netdatalib:/var/lib/netdata \
+                  -v netdatacache:/var/cache/netdata \
+                  -v /etc/passwd:/host/etc/passwd:ro \
+                  -v /etc/group:/host/etc/group:ro \
+                  -v /proc:/host/proc:ro \
+                  -v /sys:/host/sys:ro \
+                  -v /etc/os-release:/host/etc/os-release:ro \
+                  -v /var/run/docker.sock:/var/run/docker.sock:ro \
+                  --cap-add SYS_PTRACE \
+                  --security-opt apparmor=unconfined \
+                  netdata/netdata
+            """
 
                     def healthCheckPassed = false
                     def maxAttempts = 6
