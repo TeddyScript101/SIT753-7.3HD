@@ -130,7 +130,7 @@ pipeline {
                         docker pull ${IMAGE_NAME}:prod
                         docker inspect ${IMAGE_NAME}:prod
                     '''
-                            sh 'curl --fail https://your-prod-url.com/health'
+                            sh 'curl --fail http://host.docker.internal:3000/health'
                             releaseVerified = true
                             break
                 } catch (Exception e) {
