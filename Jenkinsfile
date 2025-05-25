@@ -99,55 +99,22 @@ pipeline {
                 }
             }
         }
-        stage('Monitoring') {
+            stage('Monitoring') {
             steps {
                 script {
-                    echo 'Starting container health checks...'
-
-                    // Get container ID
-                    def containerId = sh(
-                script: 'docker-compose ps -q app',
-                returnStdout: true
-            ).trim()
-
-                    if (!containerId) {
-                        error 'Application container not running!'
-                    }
-
-                    try {
-                        // Check container status
-                        sh """
-                    echo "Container status:"
-                    docker inspect -f '{{.State.Status}}' ${containerId}
-
-                    echo "\nProcesses running in container:"
-                    docker top ${containerId}
-
-                    echo "\nChecking for package.json:"
-                    docker exec ${containerId} ls -la /usr/src/app/ || true
-                """
-
-                        // Check health endpoint if container is running
-                        def healthStatus = sh(
-                    script: "docker exec ${containerId} curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/health || echo 503",
-                    returnStdout: true
-                ).trim()
-
-                        if (healthStatus == '200') {
-                            echo 'Application is healthy'
-                } else {
-                            echo "WARNING: Health check returned ${healthStatus}"
-                        }
-            } finally {
-                        // Always show logs
-                        echo '\nContainer logs:'
-                        sh "docker logs --tail 50 ${containerId} || true"
-
-                        echo '\nResource usage:'
-                        sh "docker stats ${containerId} --no-stream --format 'table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}' || true"
-                    }
+                    // Add your monitoring setup here (e.g., Prometheus/Grafana)
+                    sh '''
+                        docker-compose -f docker-compose-monitoring.yml up -d
+                        echo "Monitoring tools deployed!"
+                    '''
                 }
             }
-        }
+            post {
+                always {
+                    // Optional: Archive monitoring logs
+                    archiveArtifacts artifacts: 'monitoring-logs/*.log'
+                }
+            }
+            }
     }
 }
