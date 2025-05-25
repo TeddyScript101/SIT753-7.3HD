@@ -46,16 +46,16 @@ pipeline {
                 echo 'Deploying with Docker Compose...'
                 script {
                     sh '''
-                        if ! command -v docker-compose > /dev/null; then
-                            echo "docker-compose not found!"
-                            exit 1
-                        fi
-                    '''
+                if ! command -v docker > /dev/null; then
+                    echo "docker not found!"
+                    exit 1
+                fi
+            '''
                     sh '''
-                        docker-compose down --remove-orphans || true
-                        docker-compose build
-                        docker-compose up -d
-                    '''
+                docker compose down --remove-orphans || true
+                docker compose build
+                docker compose up -d
+            '''
                 }
             }
         }
