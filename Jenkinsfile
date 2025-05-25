@@ -52,12 +52,20 @@ pipeline {
         stage('Security') {
             steps {
                 script {
-                    sh 'npm install snyk'
+                    sh '''
+                # Download and run OWASP scanner
+                curl -sSL https://github.com/jeremylong/DependencyCheck/releases/latest/download/dependency-check-latest.zip -o dc.zip
+                unzip dc.zip
+                ./dependency-check/bin/dependency-check.sh \
+                    --scan . \
+                    --format JSON \
+                    --out owasp-report.json \
+                    --project "SIT753" \
+                    --disableNodeJS
 
-                    sh 'npm audit --json > npm-audit.json || true'
-
-                    sh 'npx snyk test --json > snyk-report.json || true'
-                    archiveArtifacts artifacts: '*-report.json'
+                # Archive report
+                archiveArtifacts artifacts: 'owasp-report.json'
+            '''
                 }
             }
         }
