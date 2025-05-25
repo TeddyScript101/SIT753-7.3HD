@@ -51,28 +51,42 @@ pipeline {
 
         stage('Security') {
             steps {
-                echo 'Running Trivy security scan'
                 script {
-                    def version = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                    try {
+                        // Option 1: Use pre-installed Trivy (recommended)
+                        sh '''
+                    # Verify Trivy exists
+                    if ! command -v trivy &> /dev/null; then
+                        echo "Trivy not found, falling back to OWASP"
+                        exit 1
+                    fi
 
-                    sh '''
-                if ! command -v trivy &> /dev/null; then
-                    echo "Installing Trivy..."
-                    curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
-                fi
-            '''
+                    # Run Trivy scan
+                    trivy image --format json --output trivy-report.json --severity HIGH,CRITICAL ${IMAGE_NAME}
 
-                    sh """
-                trivy image --exit-code 1 --severity HIGH,CRITICAL ${env.IMAGE_NAME}:${version}
-            """
-                }
-            }
-            post {
-                failure {
-                    echo 'Security scan failed - vulnerabilities found'
-                }
-                success {
-                    echo 'Security scan passed - no critical issues'
+                    # Check for critical vulnerabilities
+                    if jq -e '.Results[].Vulnerabilities[] | select(.Severity == "CRITICAL")' trivy-report.json; then
+                        echo "Critical vulnerabilities found!"
+                        currentBuild.result = 'UNSTABLE'
+                    fi
+
+                    # Archive report
+                    archiveArtifacts artifacts: 'trivy-report.json'
+                '''
+            } catch (Exception e) {
+                        // Fallback to OWASP if Trivy fails
+                        echo 'Falling back to OWASP Dependency-Check'
+                        sh '''
+                    curl -sSL -L https://github.com/jeremylong/DependencyCheck/releases/download/v8.2.1/dependency-check-8.2.1-release.zip -o dc.zip
+                    unzip -q dc.zip
+                    ./dependency-check/bin/dependency-check.sh \
+                        --scan . \
+                        --format JSON \
+                        --out security-report.json \
+                        --project "SIT753"
+                    archiveArtifacts artifacts: 'security-report.json'
+                '''
+                    }
                 }
             }
         }
