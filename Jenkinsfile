@@ -102,27 +102,32 @@ pipeline {
         stage('Monitoring') {
             steps {
                 script {
-                    // Health check for the deployed application
-                    echo 'Starting application health checks...'
+                    echo 'Starting container health checks...'
 
-                    // Option 1: Simple curl health check (adjust URL/port as needed)
-                    sh '''
-                echo "Waiting 15 seconds for app to start..."
-                sleep 15
-                curl -s http://localhost:3000/health || echo "Health check failed"
-            '''
+                    // Get the actual container name from docker-compose
+                    def containerName = sh(
+                script: 'docker-compose ps -q app',
+                returnStdout: true
+            ).trim()
 
-                    // Option 2: Container metrics monitoring (using built-in Docker stats)
-                    sh '''
-                echo "Container metrics:"
-                docker stats ${env.CONTAINER_NAME} --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}"
+                    // 1. Check if container is running
+                    sh """
+                echo "Checking container status..."
+                docker inspect -f '{{.State.Running}}' ${containerName} || echo "Container not running"
+            """
 
-                echo "Container logs (last 10 lines):"
-                docker logs ${env.CONTAINER_NAME} --tail 10
-            '''
+                    // 2. Check container health via exec
+                    sh """
+                echo "Checking application health..."
+                docker exec ${containerName} curl -s http://localhost:3000/health || \
+                echo "Health check failed - check container logs below"
 
-                // Option 3: Prometheus endpoint check (if you have /metrics endpoint)
-                // sh 'curl -s http://localhost:3000/metrics | head -n 5'
+                echo "Container logs (last 20 lines):"
+                docker logs --tail 20 ${containerName}
+
+                echo "Resource usage:"
+                docker stats ${containerName} --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"
+            """
                 }
             }
         }
