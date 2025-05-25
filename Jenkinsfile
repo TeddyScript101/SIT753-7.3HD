@@ -17,20 +17,24 @@ pipeline {
         stage('Build') {
             steps {
                 script {
+                    // Get the git commit hash to use as version tag
+                    def version = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+
                     withCredentials([usernamePassword(
-                credentialsId: 'dockerhub-creds',
-                usernameVariable: 'DOCKER_USER',
-                passwordVariable: 'DOCKER_PASS'
-            )]) {
+                        credentialsId: 'dockerhub-creds',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )]) {
                         sh """
-                    echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
-                    docker build -t ${IMAGE_NAME}:${version} .
-                    docker push ${IMAGE_NAME}:${version}
-                """
-            }
+                            echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
+                            docker build -t ${env.IMAGE_NAME}:${version} .
+                            docker push ${env.IMAGE_NAME}:${version}
+                        """
+                    }
                 }
             }
         }
+
         stage('Test') {
             steps {
                 echo 'Running Mocha tests'
