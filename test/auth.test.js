@@ -18,10 +18,7 @@ before(async function () {
         await mongoose.disconnect();
     }
 
-    await mongoose.connect(uri, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-    });
+    await mongoose.connect(uri);
 
     console.log('Connected to MongoDB');
 });

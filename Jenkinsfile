@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    tools {
+        git 'Default'
+    }
+
     environment {
         NODE_ENV = 'staging'
         MONGO_URI = 'mongodb://host.docker.internal:27017/dummy'
@@ -13,15 +17,16 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    def version = sh(script: 'git describe --tags --always', returnStdout: true).trim()
                     withCredentials([usernamePassword(
                 credentialsId: 'dockerhub-creds',
                 usernameVariable: 'DOCKER_USER',
                 passwordVariable: 'DOCKER_PASS'
             )]) {
-                        sh "docker login -u $DOCKER_USER -p $DOCKER_PASS"
-                        sh "docker build -t ${IMAGE_NAME}:${version} ."
-                        sh "docker push ${IMAGE_NAME}:${version}"
+                        sh """
+                    echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
+                    docker build -t ${IMAGE_NAME}:${version} .
+                    docker push ${IMAGE_NAME}:${version}
+                """
             }
                 }
             }
@@ -44,7 +49,7 @@ pipeline {
             steps {
                 echo 'Running security scan'
                 script {
-                    sh 'npm audit'
+                    sh 'npm audit --force'
                 }
             }
         }
