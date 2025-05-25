@@ -51,9 +51,14 @@ pipeline {
 
         stage('Security') {
             steps {
-                echo 'Running security scan'
                 script {
-                    sh 'npm audit --force'
+                    sh 'npm audit || true'
+
+                    sh 'npm install -g snyk'
+                    sh 'snyk auth --token=$SNYK_TOKEN'
+                    sh 'snyk test --json-file-output=snyk-report.json'
+
+                    archiveArtifacts artifacts: 'snyk-report.json'
                 }
             }
         }
