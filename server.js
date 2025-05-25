@@ -21,6 +21,12 @@ app.use(
     credentials: true,
   }),
 );
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'UP',
+    timestamp: Date.now()
+  });
+});
 
 
 app.set('view engine', 'ejs');
