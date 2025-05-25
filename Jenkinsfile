@@ -99,24 +99,22 @@ pipeline {
                 }
             }
         }
-            stage('Monitoring') {
+        stage('Monitoring') {
             steps {
                 script {
-                    // Verify file exists (critical for debugging)
-                    sh 'ls -la prometheus.yml || echo "File missing!"'
-                    // Add your monitoring setup here (e.g., Prometheus/Grafana)
+                    // Debug: Show workspace contents
+                    sh 'pwd && ls -la'
+
+                    // Verify prometheus.yml exists
+                    sh 'test -f prometheus.yml || (echo "ERROR: prometheus.yml missing!"; exit 1)'
+
+                    // Deploy with absolute path
                     sh '''
-                        docker-compose -f docker-compose-monitoring.yml up -d
-                        echo "Monitoring tools deployed!"
-                    '''
+                docker-compose -f docker-compose-monitoring.yml down || true
+                docker-compose -f docker-compose-monitoring.yml up -d
+            '''
                 }
             }
-            post {
-                always {
-                    // Optional: Archive monitoring logs
-                    archiveArtifacts artifacts: 'monitoring-logs/*.log'
-                }
-            }
-            }
+        }
     }
 }
