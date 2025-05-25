@@ -179,12 +179,22 @@ pipeline {
 
         stage('Monitoring') {
             steps {
-                echo 'Deploying Netdata Monitoring Stack...'
-                script {
-                            sh '''
-                docker rm -f netdata || true  # Remove by static name if exists
-                docker ps -q --filter "publish=19999" | xargs -r docker rm -f || true  # Kill anything using port 19999
+
+            sh '''
+                # Stop ALL containers using port 19999 (including ancestors)
+                docker ps -aq --filter "publish=19999" | xargs -r docker rm -f || true
+
+                # Remove any lingering netdata containers (including stopped ones)
+                docker ps -aq --filter "name=netdata" | xargs -r docker rm -f || true
+
+                # Clean up networks that might be holding references
+                docker network prune -f || true
+
+                # Remove orphaned volumes
+                docker volume rm -f netdataconfig netdatalib netdatacache || true
             '''
+
+            sleep 5
 
                     sh '''
                 docker run -d \
@@ -223,8 +233,8 @@ pipeline {
                     if (!healthCheckPassed) {
                         error "Health check failed after ${maxAttempts} attempts. Aborting pipeline."
                     }
-                }
             }
+        }
             post {
                 failure {
                     script {
@@ -232,8 +242,8 @@ pipeline {
                     }
                 }
             }
-        }
     }
+}
 
     post {
         failure {
