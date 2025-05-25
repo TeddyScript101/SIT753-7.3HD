@@ -5,7 +5,7 @@ pipeline {
         NODE_ENV = 'staging'
         MONGO_URI = 'mongodb://host.docker.internal:27017/dummy'
         JWT_SECRET = 'default_secret'
-        IMAGE_NAME = 'sit753-staging'
+        IMAGE_NAME = 'teddyhiny/sit753-staging'
         CONTAINER_NAME = 'sit753-container'
     }
 
@@ -14,10 +14,16 @@ pipeline {
             steps {
                 script {
                     def version = sh(script: 'git describe --tags --always', returnStdout: true).trim()
-                    sh "docker build -t ${IMAGE_NAME}:${version} ."
-                    sh "docker push ${IMAGE_NAME}:${version}"
+                    withCredentials([usernamePassword(
+                credentialsId: 'dockerhub-creds',
+                usernameVariable: 'DOCKER_USER',
+                passwordVariable: 'DOCKER_PASS'
+            )]) {
+                        sh "docker login -u $DOCKER_USER -p $DOCKER_PASS"
+                        sh "docker build -t ${IMAGE_NAME}:${version} ."
+                        sh "docker push ${IMAGE_NAME}:${version}"
+            }
                 }
-                archiveArtifacts artifacts: '**/dist/*'
             }
         }
         stage('Test') {
