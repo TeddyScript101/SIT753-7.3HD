@@ -39,29 +39,11 @@ pipeline {
             steps {
                 script {
                     echo "Running Trivy scan on ${env.IMAGE_NAME}:${env.VERSION}"
-
-                    // Option 1: if Trivy is installed on the agent
                     sh "trivy image --exit-code 0 --severity CRITICAL,HIGH ${env.IMAGE_NAME}:${env.VERSION}"
 
-                    // Option 2: if Trivy is NOT installed locally, use Docker version (comment out one option)
-                    // sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity CRITICAL,HIGH ${env.IMAGE_NAME}:${env.VERSION}"
-                }
-            }
-        }
+                    sh 'npm audit --json > npm-audit.json || true'
 
-        stage('Push') {
-            steps {
-                script {
-                    withCredentials([usernamePassword(
-                        credentialsId: 'dockerhub-creds',
-                        usernameVariable: 'DOCKER_USER',
-                        passwordVariable: 'DOCKER_PASS'
-                    )]) {
-                        sh """
-                            echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
-                            docker push ${env.IMAGE_NAME}:${env.VERSION}
-                        """
-                    }
+                    archiveArtifacts artifacts: '*-report.json'
                 }
             }
         }
@@ -76,6 +58,31 @@ pipeline {
             post {
                 always {
                     echo 'Test stage cleanup'
+                }
+            }
+        }
+
+                stage('SonarQube Analysis') {
+            steps {
+                withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
+                    sh 'npm run sonar'
+                }
+            }
+                }
+
+        stage('Push to Docker Hub') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(
+                        credentialsId: 'dockerhub-creds',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )]) {
+                        sh """
+                            echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
+                            docker push ${env.IMAGE_NAME}:${env.VERSION}
+                        """
+                    }
                 }
             }
         }
