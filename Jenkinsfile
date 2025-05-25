@@ -142,14 +142,14 @@ pipeline {
             steps {
                 echo 'Deploying Netdata Monitoring Stack...'
                 script {
-                    def timestamp = new Date().format('yyyyMMdd-HHmmss', TimeZone.getTimeZone('UTC'))
-                    def netdataContainerName = "netdata-${timestamp}"
+                            sh '''
+                docker rm -f netdata || true  # Remove by static name if exists
+                docker ps -q --filter "publish=19999" | xargs -r docker rm -f || true  # Kill anything using port 19999
+            '''
 
-                    // Clean up any old containers (optional, but recommended)
-                    sh "docker rm -f ${netdataContainerName} || true"
-                    sh """
+                    sh '''
                 docker run -d \
-                  --name=${netdataContainerName} \
+                  --name=netdata \
                   -p 19999:19999 \
                   -v netdataconfig:/etc/netdata \
                   -v netdatalib:/var/lib/netdata \
@@ -163,7 +163,7 @@ pipeline {
                   --cap-add SYS_PTRACE \
                   --security-opt apparmor=unconfined \
                   netdata/netdata
-            """
+            '''
 
                     def healthCheckPassed = false
                     def maxAttempts = 6
