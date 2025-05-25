@@ -6,10 +6,7 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    # Optional: if you want to explicitly set config file path
-    # command:
-    #   - '--config.file=/etc/prometheus/prometheus.yml'
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
 
   grafana:
     image: grafana/grafana

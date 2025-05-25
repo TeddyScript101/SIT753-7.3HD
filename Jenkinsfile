@@ -101,21 +101,22 @@ pipeline {
         }
         stage('Monitoring') {
             steps {
+                echo 'Deploying Monitoring Stack...'
                 script {
                     sh '''
-                        echo "Checking prometheus.yml..."
-                        if [ ! -f prometheus.yml ]; then
-                            echo "ERROR: prometheus.yml not found in workspace!"
-                            exit 1
-                        fi
+                echo "Checking prometheus.yml..."
+                if [ ! -f prometheus.yml ]; then
+                    echo "ERROR: prometheus.yml not found or is not a file!"
+                    exit 1
+                fi
 
-                        echo "Contents of current directory:"
-                        pwd && ls -la
+                echo "Directory listing for debug:"
+                pwd && ls -la
 
-                        echo "Restarting monitoring services..."
-                        docker-compose -f docker-compose-monitoring.yml down || true
-                        docker-compose -f docker-compose-monitoring.yml up -d
-                    '''
+                echo "Deploying monitoring services..."
+                docker-compose -f docker-compose-monitoring.yml down --remove-orphans || true
+                docker-compose -f docker-compose-monitoring.yml up -d
+            '''
                 }
             }
         }
