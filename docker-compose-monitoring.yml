@@ -1,16 +1,24 @@
+version: "3"
+
 services:
   prometheus:
     image: prom/prometheus
-    ports: ["9090:9090"]
+    ports:
+      - "9090:9090"
     volumes:
-      - "./prometheus.yml:/etc/prometheus/prometheus.yml"
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    # Optional: if you want to explicitly set config file path
+    # command:
+    #   - '--config.file=/etc/prometheus/prometheus.yml'
 
   grafana:
     image: grafana/grafana
-    ports: ["3000:3000"]
+    ports:
+      - "3000:3000"
     volumes:
-      - "grafana_data:/var/lib/grafana"
-    depends_on: ["prometheus"]
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
 
 volumes:
   grafana_data:

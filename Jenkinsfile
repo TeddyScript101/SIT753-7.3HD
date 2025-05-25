@@ -102,17 +102,20 @@ pipeline {
         stage('Monitoring') {
             steps {
                 script {
-                    // Debug: Show workspace contents
-                    sh 'pwd && ls -la'
-
-                    // Verify prometheus.yml exists
-                    sh 'test -f prometheus.yml || (echo "ERROR: prometheus.yml missing!"; exit 1)'
-
-                    // Deploy with absolute path
                     sh '''
-                docker-compose -f docker-compose-monitoring.yml down || true
-                docker-compose -f docker-compose-monitoring.yml up -d
-            '''
+                        echo "Checking prometheus.yml..."
+                        if [ ! -f prometheus.yml ]; then
+                            echo "ERROR: prometheus.yml not found in workspace!"
+                            exit 1
+                        fi
+
+                        echo "Contents of current directory:"
+                        pwd && ls -la
+
+                        echo "Restarting monitoring services..."
+                        docker-compose -f docker-compose-monitoring.yml down || true
+                        docker-compose -f docker-compose-monitoring.yml up -d
+                    '''
                 }
             }
         }
