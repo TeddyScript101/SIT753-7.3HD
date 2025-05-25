@@ -8,27 +8,27 @@ const { MongoMemoryServer } = require('mongodb-memory-server');
 const { app } = require('../server');
 const { User } = require('../models');
 
-let mongoServer;
 let token;
 let userId;
 
-// Global setup and teardown
 before(async function () {
-    mongoServer = await MongoMemoryServer.create();
-    const uri = mongoServer.getUri();
+    const uri = process.env.MONGO_URI;
 
     if (mongoose.connection.readyState !== 0) {
         await mongoose.disconnect();
     }
 
-    await mongoose.connect(uri);
+    await mongoose.connect(uri, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+    });
 
-    console.log('MongoDB In-Memory Server connected');
+    console.log('Connected to MongoDB');
 });
 
 after(async function () {
     await mongoose.disconnect();
-    await mongoServer.stop();
+    console.log('Disconnected from MongoDB');
 });
 
 afterEach(async function () {
@@ -36,6 +36,7 @@ afterEach(async function () {
         await User.deleteMany({});
     }
 });
+
 
 describe('Auth Middleware Unit Test', () => {
     it('should respond 403 if no token provided', async () => {
