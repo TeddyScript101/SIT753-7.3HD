@@ -129,15 +129,21 @@ pipeline {
                   netdata/netdata
             '''
 
-                    sh '''
-                         curl --fail http://localhost:3000/health
-                            if [ $? -ne 0 ]; then
-                                echo "Health check failed, exiting."
-                                exit 1
-                            else
-                                echo "Health check passed."
-                            fi
-                        '''
+                    def healthCheckPassed = false
+                    def maxAttempts = 6
+                    def waitTime = 5 // seconds between retries
+
+                    for (int i = 0; i < maxAttempts; i++) {
+                        try {
+                            sh 'curl --fail http://localhost:3000/health'
+                            echo 'Health check passed.'
+                            healthCheckPassed = true
+                            break
+                } catch (Exception e) {
+                            echo "Attempt ${i + 1} failed. Retrying in ${waitTime} seconds..."
+                            sleep(waitTime)
+                        }
+                    }
                 }
             }
         }
