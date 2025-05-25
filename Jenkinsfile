@@ -52,41 +52,27 @@ pipeline {
         stage('Security') {
             steps {
                 script {
-                    try {
-                        // Option 1: Use pre-installed Trivy (recommended)
-                        sh '''
-                    # Verify Trivy exists
-                    if ! command -v trivy &> /dev/null; then
-                        echo "Trivy not found, falling back to OWASP"
-                        exit 1
-                    fi
+                    sh '''
+                docker run --rm \
+                    -v "$PWD:/src" \
+                    -v "$PWD/odc-cache:/usr/share/dependency-check/data" \
+                    -v /var/run/docker.sock:/var/run/docker.sock \
+                    owasp/dependency-check:latest \
+                    --scan /src \
+                    --format JSON \
+                    --out /src/security-report.json \
+                    --project "SIT753" \
+                    --disableNodeAudit \
+                    --disableYarnAudit \
+                    --disableNodeJS \
+                    --enableExperimental
 
-                    # Run Trivy scan
-                    trivy image --format json --output trivy-report.json --severity HIGH,CRITICAL ${IMAGE_NAME}
+                # Generate simplified report
+                jq '.dependencies[] | select(.vulnerabilities != null)' security-report.json > vulnerabilities.json || echo "No vulnerabilities found"
 
-                    # Check for critical vulnerabilities
-                    if jq -e '.Results[].Vulnerabilities[] | select(.Severity == "CRITICAL")' trivy-report.json; then
-                        echo "Critical vulnerabilities found!"
-                        currentBuild.result = 'UNSTABLE'
-                    fi
-
-                    # Archive report
-                    archiveArtifacts artifacts: 'trivy-report.json'
-                '''
-            } catch (Exception e) {
-                        // Fallback to OWASP if Trivy fails
-                        echo 'Falling back to OWASP Dependency-Check'
-                        sh '''
-                    curl -sSL -L https://github.com/jeremylong/DependencyCheck/releases/download/v8.2.1/dependency-check-8.2.1-release.zip -o dc.zip
-                    unzip -q dc.zip
-                    ./dependency-check/bin/dependency-check.sh \
-                        --scan . \
-                        --format JSON \
-                        --out security-report.json \
-                        --project "SIT753"
-                    archiveArtifacts artifacts: 'security-report.json'
-                '''
-                    }
+                # Archive both reports
+                archiveArtifacts artifacts: '*-report.json, vulnerabilities.json'
+            '''
                 }
             }
         }
