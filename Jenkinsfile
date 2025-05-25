@@ -91,6 +91,33 @@ pipeline {
         //     }
         // }
 
+        stage('Security') {
+            steps {
+                script {
+                    try {
+                        sh '''
+                    echo "Installing Trivy in workspace-local bin folder..."
+                    mkdir -p trivy-bin
+                    curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b trivy-bin
+                    export PATH=$(pwd)/trivy-bin:$PATH
+
+                    echo "Running Trivy scan..."
+                    ./trivy-bin/trivy image --format json --output trivy-report.json --severity HIGH,CRITICAL ${IMAGE_NAME} || echo "Trivy scan completed with vulnerabilities"
+
+                    echo "Checking for critical vulnerabilities..."
+                    jq -e '.Results[].Vulnerabilities[] | select(.Severity == "CRITICAL")' trivy-report.json && echo "CRITICAL vulns found!" && exit 1 || echo "No critical vulnerabilities found."
+
+                    echo "Archiving Trivy report..."
+                '''
+                        archiveArtifacts artifacts: 'trivy-report.json'
+            } catch (Exception e) {
+                        echo 'Trivy scan failed or critical vulnerabilities found. Marking build as UNSTABLE.'
+                        currentBuild.result = 'UNSTABLE'
+                    }
+                }
+            }
+        }
+
         stage('Deploy') {
             steps {
                 echo 'Deploying with Docker Compose...'
