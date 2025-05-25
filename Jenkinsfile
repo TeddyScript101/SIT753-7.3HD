@@ -51,32 +51,28 @@ pipeline {
 
         stage('Security') {
             steps {
+                echo 'Running Trivy security scan'
                 script {
+                    def version = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+
                     sh '''
-                # Download using correct URL (GitHub redirects need -L)
-                curl -sSL -L https://github.com/jeremylong/DependencyCheck/releases/latest/download/dependency-check-8.2.1-release.zip -o dc.zip
-
-                # Verify download
-                if [ -f dc.zip ]; then
-                    echo "Download successful"
-                    unzip -q dc.zip
-                    ./dependency-check/bin/dependency-check.sh \
-                        --scan . \
-                        --format JSON \
-                        --out owasp-report.json \
-                        --project "SIT753" \
-                        --disableNodeJS
-
-                    # Archive report
-                    [ -f owasp-report.json ] && echo "Report generated" || echo "Report generation failed"
-                else
-                    echo "Download failed - falling back to npm audit"
-                    npm audit --json > owasp-report.json || true
+                if ! command -v trivy &> /dev/null; then
+                    echo "Installing Trivy..."
+                    curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
                 fi
-
-                # Always archive if file exists
-                [ -f owasp-report.json ] && archiveArtifacts artifacts: 'owasp-report.json'
             '''
+
+                    sh """
+                trivy image --exit-code 1 --severity HIGH,CRITICAL ${env.IMAGE_NAME}:${version}
+            """
+                }
+            }
+            post {
+                failure {
+                    echo 'Security scan failed - vulnerabilities found'
+                }
+                success {
+                    echo 'Security scan passed - no critical issues'
                 }
             }
         }
