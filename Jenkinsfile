@@ -138,6 +138,45 @@ pipeline {
             }
         }
 
+        stage('Release') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(
+                credentialsId: 'git-creds',
+                usernameVariable: 'GIT_USER',
+                passwordVariable: 'GIT_TOKEN'
+            )]) {
+                        sh """
+                    git config --global user.email "jenkins@example.com"
+                    git config --global user.name "Jenkins"
+                    git tag -a "v${env.VERSION}" -m "Release ${env.VERSION} via Jenkins"
+                    git push "https://${GIT_USER}:${GIT_TOKEN}@github.com/your-repo.git" "v${env.VERSION}"
+                """
+                        echo "Git tag 'v${env.VERSION}' created and pushed."
+            }
+
+                    // 2. Docker Hub Promotion (Staging -> Prod)
+                    withCredentials([usernamePassword(
+                credentialsId: 'dockerhub-creds',
+                usernameVariable: 'DOCKER_USER',
+                passwordVariable: 'DOCKER_PASS'
+            )]) {
+                        sh """
+                    echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
+                    docker tag ${env.IMAGE_NAME}:${env.VERSION} ${env.IMAGE_NAME}:prod
+                    docker push ${env.IMAGE_NAME}:prod
+                    echo "Docker image promoted to 'prod' tag in Docker Hub."
+                """
+            }
+                }
+            }
+            post {
+                failure {
+                    sendFailureEmail('Release')
+                }
+            }
+        }
+
         stage('Monitoring') {
             steps {
                 echo 'Deploying Netdata Monitoring Stack...'
