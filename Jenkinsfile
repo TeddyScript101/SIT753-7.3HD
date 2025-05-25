@@ -135,13 +135,17 @@ pipeline {
 
                     for (int i = 0; i < maxAttempts; i++) {
                         try {
-                            sh 'curl --fail http://localhost:3000/health'
+                            sh 'curl --fail http://host.docker.internal:3000/health'
                             echo 'Health check passed.'
                             healthCheckPassed = true
                             break
                 } catch (Exception e) {
                             echo "Attempt ${i + 1} failed. Retrying in ${waitTime} seconds..."
                             sleep(waitTime)
+                        }
+
+                        if (!healthCheckPassed) {
+                            error "Health check failed after ${maxAttempts} attempts. Aborting pipeline."
                         }
                     }
                 }
