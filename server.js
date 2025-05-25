@@ -6,9 +6,8 @@ const routes = require('./routes');
 const cors = require('cors');
 const http = require('http');
 const socketIo = require('socket.io');
-const validateEnv = require('./helpers/validateEnv');
 const secretAngelSocket = require("./sockets/secretAngelSocket");
-validateEnv();
+
 
 const app = express();
 const port = 3000;
