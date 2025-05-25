@@ -25,13 +25,13 @@ pipeline {
                     sh 'npm test'
                 }
             }
-
             post {
                 always {
                     echo 'Test stage cleanup'
                 }
             }
         }
+
         stage('Security') {
             steps {
                 echo 'Running security scan'
@@ -40,22 +40,24 @@ pipeline {
                 }
             }
         }
-  stage('Deploy') {
-    steps {
-        echo 'Deploying with Docker Compose...'
-        script {
-            sh '''
-                if ! command -v docker-compose > /dev/null; then
-                    echo "docker-compose not found!"
-                    exit 1
-                fi
-            '''
-            sh '''
-                docker-compose down --remove-orphans || true
-                docker-compose build
-                docker-compose up -d
-            '''
+
+        stage('Deploy') {
+            steps {
+                echo 'Deploying with Docker Compose...'
+                script {
+                    sh '''
+                        if ! command -v docker-compose > /dev/null; then
+                            echo "docker-compose not found!"
+                            exit 1
+                        fi
+                    '''
+                    sh '''
+                        docker-compose down --remove-orphans || true
+                        docker-compose build
+                        docker-compose up -d
+                    '''
+                }
+            }
         }
     }
 }
-
