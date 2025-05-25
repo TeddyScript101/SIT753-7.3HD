@@ -12,7 +12,6 @@ services:
     networks:
       - app-network
     volumes:
-      - .:/usr/src/app:delegated
       - /usr/src/app/node_modules
     restart: always
 
