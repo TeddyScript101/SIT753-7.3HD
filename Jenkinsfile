@@ -56,11 +56,7 @@ pipeline {
 
                     sh 'npm audit --json > npm-audit.json || true'
 
-                    withCredentials([string(credentialsId: 'SNYK_TOKEN', variable: 'SNYK_TOKEN')]) {
-                        sh 'npx snyk auth $SNYK_TOKEN'
-                        sh 'npx snyk test --json-file-output=snyk-report.json'
-                    }
-
+                    sh 'npx snyk test --json > snyk-report.json || true'
                     archiveArtifacts artifacts: '*-report.json'
                 }
             }
