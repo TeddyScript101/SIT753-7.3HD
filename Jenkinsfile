@@ -12,12 +12,14 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                echo 'Start Building'
-                sh 'npm install'
-                archiveArtifacts artifacts: 'package.json,package-lock.json,dist/**'
+                script {
+                    def version = sh(script: 'git describe --tags --always', returnStdout: true).trim()
+                    sh "docker build -t ${IMAGE_NAME}:${version} ."
+                    sh "docker push ${IMAGE_NAME}:${version}"
+                }
+                archiveArtifacts artifacts: '**/dist/*'
             }
         }
-
         stage('Test') {
             steps {
                 echo 'Running Mocha tests'
