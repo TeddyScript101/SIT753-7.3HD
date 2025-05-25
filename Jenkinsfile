@@ -52,13 +52,16 @@ pipeline {
         stage('Security') {
             steps {
                 script {
-                    sh 'npm audit || true'
+                    sh 'npm install snyk'
 
-                    sh 'npm install -g snyk'
-                    sh 'snyk auth --token=$SNYK_TOKEN'
-                    sh 'snyk test --json-file-output=snyk-report.json'
+                    sh 'npm audit --json > npm-audit.json || true'
 
-                    archiveArtifacts artifacts: 'snyk-report.json'
+                    withCredentials([string(credentialsId: 'SNYK_TOKEN', variable: 'SNYK_TOKEN')]) {
+                        sh 'npx snyk auth $SNYK_TOKEN'
+                        sh 'npx snyk test --json-file-output=snyk-report.json'
+                    }
+
+                    archiveArtifacts artifacts: '*-report.json'
                 }
             }
         }
