@@ -46,16 +46,11 @@ pipeline {
 
                 script {
                     sh '''
-                        docker rm -f $CONTAINER_NAME || true
-                        docker build -t $IMAGE_NAME .
-                        docker run -d \
-                            --name $CONTAINER_NAME \
-                            -e NODE_ENV=$NODE_ENV \
-                            -e MONGO_URI=$MONGO_URI \
-                            -e JWT_SECRET=$JWT_SECRET \
-                            -p 3000:3000 \
-                            $IMAGE_NAME
+                        docker compose down || true
+                        docker compose build
+                        docker compose up -d
                     '''
+                }
                 }
             }
         }
