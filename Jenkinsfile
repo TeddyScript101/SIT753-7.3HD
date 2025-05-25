@@ -102,6 +102,8 @@ pipeline {
             stage('Monitoring') {
             steps {
                 script {
+                    // Verify file exists (critical for debugging)
+                    sh 'ls -la prometheus.yml || echo "File missing!"'
                     // Add your monitoring setup here (e.g., Prometheus/Grafana)
                     sh '''
                         docker-compose -f docker-compose-monitoring.yml up -d
