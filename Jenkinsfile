@@ -89,33 +89,36 @@ pipeline {
         stage('Release') {
             steps {
                 script {
+                    // GitHub tagging and push
                     withCredentials([usernamePassword(
-                        credentialsId: 'git-creds',
-                        usernameVariable: 'GIT_USER',
-                        passwordVariable: 'GIT_TOKEN'
-                    )]) {
-                        sh """
-                            git config --global user.email "jenkins@example.com"
-                            git config --global user.name "Jenkins"
-                            git tag -a "v${env.VERSION}" -m "Release ${env.VERSION} via Jenkins"
-                            git push "https://${GIT_USER}:${GIT_TOKEN}@github.com/TeddyScript101/SIT753-7.3HD.git" "v${env.VERSION}"
-                        """
+                credentialsId: 'git-creds',
+                usernameVariable: 'GIT_USER',
+                passwordVariable: 'GIT_TOKEN'
+            )]) {
+                        sh '''
+                    git config --global user.email "jenkins@example.com"
+                    git config --global user.name "Jenkins"
+                    git tag -a "v${VERSION}" -m "Release ${VERSION} via Jenkins"
+                    git push "https://${GIT_USER}:${GIT_TOKEN}@github.com/TeddyScript101/SIT753-7.3HD.git" "v${VERSION}"
+                '''
                         echo "Git tag 'v${env.VERSION}' created and pushed."
-                    }
+            }
 
+                    // Docker image tagging and push
                     withCredentials([usernamePassword(
-                        credentialsId: 'dockerhub-creds',
-                        usernameVariable: 'DOCKER_USER',
-                        passwordVariable: 'DOCKER_PASS'
-                    )]) {
-                        sh """
-                            echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
-                            docker tag ${env.IMAGE_NAME}:${env.VERSION} ${env.IMAGE_NAME}:prod
-                            docker push ${env.IMAGE_NAME}:prod
-                            echo "Docker image promoted to 'prod' tag in Docker Hub."
-                        """
-                    }
+                credentialsId: 'dockerhub-creds',
+                usernameVariable: 'DOCKER_USER',
+                passwordVariable: 'DOCKER_PASS'
+            )]) {
+                        sh '''
+                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                    docker tag ${IMAGE_NAME}:${VERSION} ${IMAGE_NAME}:prod
+                    docker push ${IMAGE_NAME}:prod
+                '''
+                        echo "Docker image promoted to 'prod' tag in Docker Hub."
+            }
 
+                    // Release verification logic
                     def releaseVerified = false
                     def maxAttempts = 5
                     def waitTime = 10
@@ -123,16 +126,16 @@ pipeline {
                     for (int i = 0; i < maxAttempts; i++) {
                         try {
                             sh "git ls-remote --tags origin | grep -q 'refs/tags/v${env.VERSION}'"
-                            sh """
-                                docker pull ${env.IMAGE_NAME}:prod
-                                docker inspect ${env.IMAGE_NAME}:prod
-                            """
+                            sh '''
+                        docker pull ${IMAGE_NAME}:prod
+                        docker inspect ${IMAGE_NAME}:prod
+                    '''
                             sh 'curl --fail https://your-prod-url.com/health'
                             releaseVerified = true
                             break
-                        } catch (Exception e) {
-                            echo "Release verification attempt ${i+1} failed. Retrying..."
-                            sleep(waitTime)
+                } catch (Exception e) {
+                            echo "Release verification attempt ${i + 1} failed. Retrying in ${waitTime}s..."
+                            sleep(time: waitTime, unit: 'SECONDS')
                         }
                     }
 
