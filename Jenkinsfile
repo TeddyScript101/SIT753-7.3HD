@@ -52,12 +52,17 @@ pipeline {
         stage('Security') {
             steps {
                 script {
+                    // Use platform-compatible OWASP image
                     sh '''
+                # Create cache directory if it doesn't exist
+                mkdir -p odc-cache
+
+                # Run platform-specific OWASP scan
                 docker run --rm \
+                    --platform linux/amd64 \
                     -v "$PWD:/src" \
                     -v "$PWD/odc-cache:/usr/share/dependency-check/data" \
-                    -v /var/run/docker.sock:/var/run/docker.sock \
-                    owasp/dependency-check:latest \
+                    owasp/dependency-check:8.2.1 \
                     --scan /src \
                     --format JSON \
                     --out /src/security-report.json \
@@ -65,7 +70,7 @@ pipeline {
                     --disableNodeAudit \
                     --disableYarnAudit \
                     --disableNodeJS \
-                    --enableExperimental
+                    --noupdate
 
                 # Generate simplified report
                 jq '.dependencies[] | select(.vulnerabilities != null)' security-report.json > vulnerabilities.json || echo "No vulnerabilities found"
