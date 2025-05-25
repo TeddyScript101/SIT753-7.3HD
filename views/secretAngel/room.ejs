@@ -1,0 +1,158 @@
+<%- include('../components/header', { title: 'The Secret Angel Game' , user, room }) %>
+    <link rel="stylesheet" href="/css/secretAngelRoom.css" />
+    <div class="room-container">
+
+        <div id="budgetDisplay" style="font-size:50px; color:white; position: absolute; top:20px; left: 20px;">
+            <% if (room && room.budget !=null) { %>
+                <strong>Budget:</strong> $<%= room.budget %>
+                    <% } else { %>
+                        <!-- Empty or placeholder -->
+                        <% } %>
+        </div>
+
+        <div class="image-container">
+            <% if (room.assignment && room.assignment.length> 0) { %>
+                <div class="assignment-cards">
+                    <% let myAssignment=null; if (room.gameStatus==='started' ) {
+                        myAssignment=room.assignment.find(pair=>
+                        pair.secretAngel && pair.secretAngel._id &&
+                        pair.secretAngel._id.toString() === user.id.toString()
+                        );
+                        }
+                        %>
+
+                        <% if (myAssignment) { %>
+                            <div class="assignment-card">
+                                <div>Your Target:</div>
+                                <div>
+                                    <%= myAssignment.user.name %>
+                                </div>
+                            </div>
+                            <% } else { %>
+                                <div style="font-size: 50px; color:white">
+                                    Result Revealed
+                                </div>
+                                <% } %>
+                </div>
+
+                <% } else { %>
+                    <img src="/gift.png" alt="Secret Angel" class="gift-image" />
+                    <% } %>
+        </div>
+
+        <div class=" right-room-info-container">
+            <div class="participant-list" id="participantList">
+                <% if (room && room.members && room.members.length> 0) { %>
+                    <% room.members.forEach(function(member) { %>
+                        <div>
+                            <%= member.user.name %>
+                                <% if (member.isHost) { %> (Host) <% } %>
+                                        <% if (member.isReady) { %> (Ready) <% } %>
+                        </div>
+                        <% }); %>
+                            <% } else { %>
+                                <div>No participants yet.</div>
+                                <% } %>
+            </div>
+
+
+            <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+
+                <% if (room.gameStatus==='waiting' ) { %>
+                    <button class="action-btn" style="background-color: #F9DE72;" onclick="openModal()">Send
+                        Invitation Link</button>
+                    <% } %>
+
+                        <button class="action-btn" style="background-color: #BF7B7B;"
+                            onclick="openSettingsModal()">Settings</button>
+
+                        <% if (room.host._id.toString()===user.id && room.assignment?.length==0) { %>
+                            <button class="action-btn" style="background-color: #559A6A;"
+                                onclick="startGame()">Start</button>
+                            <% } else if (room.assignment?.length!==0 && room.host._id.toString()===user.id ) { %>
+                                <button class="action-btn" style="background-color: #559A6A;"
+                                    onclick="revealResult()">Reveal Result</button>
+                                <% } else if(room.gameStatus=='waiting' ) { %>
+                                    <button class="action-btn" style="background-color: #559A6A;"
+                                        onclick="toggleReadyToStart()">Ready</button>
+                                    <% } %>
+            </div>
+
+
+        </div>
+
+
+        <div id="invitationModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <h2>Invite Friends</h2>
+                <p>Enter email addresses and press Enter</p>
+
+                <div class="email-input-container">
+                    <ul id="emailList"></ul>
+                    <input type="email" id="inviteEmail" placeholder="Type an email and press Enter" />
+                </div>
+
+                <button onclick="sendInvitations()">Send Invitations</button>
+            </div>
+        </div>
+
+        <div id="settingsModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close" onclick="closeSettingsModal()">&times;</span>
+                <h2>Game Settings</h2>
+
+                <label for="gameBudget">Set Budget:</label>
+                <input type="number" id="gameBudget" placeholder="Enter budget amount" />
+
+                <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+                    <button onclick="submitSettings()">Submit</button>
+
+                    <% if (room && user && room.host._id.toString()==user.id) { %>
+                        <button onclick="deleteGame()" style="background-color: #BF7B7B;">Delete
+                            Game</button>
+                        <% } %>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="chat-header" onclick="toggleChat()">
+                Chat
+            </div>
+            <div class="chat-body" id="chatBody">
+                <div id="messages">
+                    <% room.chat.filter(el=>!el.isSystem).forEach(msg=> { %>
+                        <div class="chat-message">
+                            <strong>
+                                <%= msg?.sender?.name %>:
+                            </strong>
+                            <%= msg.message %>
+                                <small>
+                                    <%= new Date(msg.createdAt).toLocaleTimeString() %>
+                                </small>
+                        </div>
+                        <% }) %>
+                </div>
+            </div>
+            <div class="chat-input-container">
+                <input type="text" id="chatInput" placeholder="Type a message..." />
+                <button onclick="sendUserMessage()">Send</button>
+            </div>
+        </div>
+
+        <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+
+
+        <script>
+            window.secretAngelRoomData = {
+                roomId: "<%= room.roomId %>",
+                objectRoomId: "<%= room._id %>",
+                userId: "<%= user.id %>",
+                userName: "<%= user.name %>"
+            };
+        </script>
+        <script src="/js/secretAngelRoom.js"></script>
+
+        <%- include('../components/footer') %>

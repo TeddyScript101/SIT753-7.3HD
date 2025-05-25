@@ -2,7 +2,7 @@
 
     <div class="container" style="max-width: 600px; margin-top: 40px; padding-bottom: 80px;">
         <h2>User Settings</h2>
-        <form action="/api/users/settings" method="POST" enctype="multipart/form-data">
+        <form id="settingsForm" action="/api/users/settings" method="POST" enctype="multipart/form-data">
 
             <div class="form-group">
                 <label for="name">Username</label>
@@ -10,10 +10,9 @@
             </div>
 
             <div class="form-group mt-3">
-                <label>Current Avam tar</label><br />
+                <label>Current Avatar</label><br />
                 <% if (user.avatar) { %>
                     <img src="<%= user.avatar %>" alt="avatar" width="100" class="rounded-circle mb-2" />
-
                     <div class="form-group mt-2">
                         <label>
                             <input type="checkbox" name="removeAvatar" />
@@ -25,7 +24,6 @@
                         <% } %>
                             <input type="file" class="form-control" name="avatar" accept="image/*" />
             </div>
-
 
             <div class="form-group mt-3">
                 <label for="password">New Password</label>
@@ -42,5 +40,39 @@
             <button type="submit" class="btn btn-primary mt-4">Update Settings</button>
         </form>
     </div>
+
+    <script>
+        const form = document.getElementById('settingsForm');
+
+        async function handleSubmit(e) {
+            e.preventDefault();
+            e.stopImmediatePropagation(); // Prevent other listeners (if any)
+
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true; // Prevent double clicks
+
+            try {
+                const formData = new FormData(e.target);
+                const response = await fetch('/api/users/settings', {
+                    method: 'PUT', // Or POST if your backend prefers it
+                    body: formData,
+                    // Do NOT set Content-Type (let browser handle multipart)
+                });
+
+                if (!response.ok) throw new Error("Update failed");
+                const result = await response.json();
+                window.location.reload();
+            } catch (err) {
+                console.error("Error:", err);
+                alert("Failed: " + err.message);
+            } finally {
+                submitBtn.disabled = false;
+            }
+        }
+
+
+        form.removeEventListener('submit', handleSubmit); // Cleanup if any
+        form.addEventListener('submit', handleSubmit);
+    </script>
 
     <%- include('../components/footer') %>

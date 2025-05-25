@@ -1,0 +1,58 @@
+<%- include('components/header', { title: 'GiftCommunity', user, post, usercreator, totalLikes, isLikedByCurrentUser}) %>
+
+<div class="container" style="background-color: var(--beige-brown); padding: 15px; width:auto; border-radius: 12px; margin-bottom: 20px;">
+  <div class="row">
+    <!-- Media (Image or Video) -->
+    <% if (post.media && post.media !== "None") { %>
+      <% if (post.media.endsWith('.mp4')) { %>
+        <!-- Video -->
+        <video controls width="100%">
+          <source src="<%= post.media %>" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+      <% } else if (post.media.endsWith('.jpg') || post.media.endsWith('.jpeg') || post.media.endsWith('.png')) { %>
+        <!-- Image -->
+        <img src="<%= post.media %>" alt="Post media" style="max-width: 100%;">
+      <% } %>
+    <% } %>
+  </div>
+
+  <div class="row">
+    <!-- Title -->
+    <h4 style="color: var(--main-color);"><%= post.title %></h4>
+  </div>
+
+  <div class="row" style="display: flex; justify-content: space-between; padding: 0; align-items: center;">
+    <div class="col m3 l3">
+       <!-- Post Creator -->
+      <h6 style="margin: 0;">Posted by: <%= usercreator %></h6>
+    </div>
+    <div class="col m6 l6"></div>
+    <div class="col m3 l3">
+      <!-- Uploaded date -->
+    <span style="margin: 0;">Uploaded on: <%= post.uploadedAt.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) %></span>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Total Likes and Like Button -->
+    <div class="likes" style="display:flex; margin-left: 10px; align-items: center;">
+      <button id="likeBtn" data-post-id="<%= post._id %>" style="background: none; border: none; padding: 0; outline: none; cursor: pointer;">
+        <i id="likeIcon" class="material-icons" style="font-size: x-large; margin-right: 5px; color: var(--main-color);">
+          <%= isLikedByCurrentUser ? 'favorite' : 'favorite_border' %>
+        </i>
+      </button>
+      <span id="likeCount" style="font-size: large;"><%= post.total_likes %> likes</span> 
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Description -->
+    <p style="margin-left: 10px; margin-right: 10px;"><%= post.description %></p>
+  </div>
+  
+</div>
+
+<!-- Page-specific JS here -->
+<script src="/js/likesPost.js"></script>
+<%- include('components/footer') %>

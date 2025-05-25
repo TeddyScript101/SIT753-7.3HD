@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middlewares/authMiddleware');
 const jwt = require('jsonwebtoken');
+const { postController } = require('../controllers');
+const secretAngelRouter = require('./pages/secretAngelPages');
 
 
 router.get('/', authMiddleware, (req, res) => {
@@ -45,7 +47,15 @@ router.get('/reset-password/:token', (req, res) => {
   }
 });
 
+router.use('/secretAngel', authMiddleware, secretAngelRouter);
 
 
+router.get('/addPost', authMiddleware, (req, res) => {
+  res.render('addPostCommunity', { error: null, user: req.user });
+});
+
+router.get('/communityMainPage', authMiddleware, postController.getCommunityMainPage);
+
+router.get('/detailPostPage', authMiddleware, postController.getDetailPostPage);
 
 module.exports = router;

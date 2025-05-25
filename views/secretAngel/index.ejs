@@ -1,0 +1,67 @@
+<%- include('../components/header', { title: 'The Secret Angel Game' , user, rooms }) %>
+    <link rel="stylesheet" href="/css/secretAngelHome.css">
+    <div class="lobby-container">
+        <h1 class="lobby-title">Lobby</h1>
+
+        <div class="room-list">
+            <% rooms.forEach(room=> { %>
+                <div class="room-card" style="background-color: <%- room.color %>;"
+                    onclick="openJoinModal('<%- room.roomId %>')">
+                    <div>Room ID: <%- room.roomId %></div>
+                    <div>Host: <%- room.host.name %></div>
+                </div>
+
+                <% }) %>
+        </div>
+
+        <div class="create-game-container">
+            <div class="create-game-btn">Create A Game</div>
+        </div>
+    </div>
+
+    <div id="createGameModal" class="modal-backdrop hidden">
+        <div class="modal">
+            <div class="modalTitle">Create Game</div>
+            <form id="createGameForm">
+                <div class="form-row">
+                    <label for="budget">Budget:</label>
+                    <input type="text" name="budget" id="budget" />
+                </div>
+
+                <div class="form-row">
+                    <label for="password">Password:</label>
+                    <input type="text" name="password" id="password" />
+                </div>
+
+                <div class="modal-actions">
+                    <button type="submit" class="modal-btn">Create</button>
+                    <button type="button" id="closeModalBtn" class="modal-btn cancel">Back</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <div id="joinGameModal" class="modal-backdrop hidden">
+        <div class="modal">
+            <div class="modalTitle">Join Game</div>
+            <form id="joinGameForm">
+                <input type="hidden" id="joinRoomId" name="roomId" />
+
+                <div class="form-row">
+                    <label for="joinPassword">Password:</label>
+                    <input type="text" name="password" id="joinPassword" />
+                </div>
+
+                <div class="modal-actions">
+                    <button type="submit" class="modal-btn">Join</button>
+                    <button type="button" id="closeJoinModalBtn" class="modal-btn cancel">Back</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <%- include('../components/footer') %>
+        <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+        <script src="/js/secretAngelHome.js"></script>

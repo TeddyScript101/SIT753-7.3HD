@@ -1,0 +1,95 @@
+.
+├── LICENSE
+├── README.md
+├── controllers
+│   ├── index.js
+│   ├── postController.js
+│   ├── secretAngelController.js
+│   └── userController.js
+├── db.js
+├── emailTemplate
+│   ├── OTPEmail.js
+│   ├── forgotPasswordEmail.js
+│   ├── secretAngelInviteEmail.js
+│   └── secretAngelResultEmail.ejs
+├── helpers
+│   ├── sendEmail.js
+│   ├── signJWT.js
+│   └── validateEnv.js
+├── middlewares
+│   ├── authMiddleware.js
+│   ├── passport.js
+│   └── upload.js
+├── models
+│   ├── index.js
+│   ├── likepost.js
+│   ├── post.js
+│   ├── secretAngel.js
+│   └── user.js
+├── package-lock.json
+├── package.json
+├── public
+│   ├── css
+│   │   ├── secretAngelHome.css
+│   │   ├── secretAngelRoom.css
+│   │   └── styles.css
+│   ├── gift.png
+│   ├── js
+│   │   ├── likesPost.js
+│   │   ├── login.js
+│   │   ├── post.js
+│   │   ├── scripts.js
+│   │   ├── secretAngelHome.js
+│   │   ├── secretAngelRoom.js
+│   │   └── signup.js
+│   └── uploads
+│       ├── 1746274510223-511977480.jpg
+│       ├── 1746755350627-683512648.png
+│       ├── 1746759921472-27896358.png
+│       ├── 1747094708884-872632991.png
+│       ├── 1748053523267-158986012.png
+│       ├── 1748053644237-381397895.png
+│       ├── 1748053695211-365094899.png
+│       ├── 1748053924703-382630969.png
+│       ├── 1748063658778-972887508.png
+│       └── 1748063679779-984442532.png
+├── routes
+│   ├── index.js
+│   ├── pageRoutes.js
+│   ├── pages
+│   │   └── secretAngelPages.js
+│   ├── postRoutes.js
+│   ├── secretAngelRoutes.js
+│   └── userRoutes.js
+├── server.js
+├── services
+│   ├── index.js
+│   ├── likePostService.js
+│   ├── postService.js
+│   ├── secretAngelService.js
+│   └── userService.js
+├── sockets
+│   └── secretAngelSocket.js
+├── structure.txt
+├── test
+│   ├── auth.test.js
+│   └── secretAngel.test.js
+└── views
+    ├── addPostCommunity.ejs
+    ├── auth
+    │   ├── login.ejs
+    │   ├── reset-password.ejs
+    │   ├── signup.ejs
+    │   └── userSetting.ejs
+    ├── communityMainPage.ejs
+    ├── components
+    │   ├── footer.ejs
+    │   ├── header.ejs
+    │   └── spinner.ejs
+    ├── detailPostCommunity.ejs
+    ├── home.ejs
+    └── secretAngel
+        ├── index.ejs
+        └── room.ejs
+
+19 directories, 74 files

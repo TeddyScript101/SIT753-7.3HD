@@ -1,0 +1,82 @@
+<%- include('components/header', { title: 'Add Post' , user }) %>
+
+<div class="container">
+    <div class="row">
+        <h2 id="add-post-title" class="wave-text">🎁 Share an Idea about Gift with the Community</h2>
+        <p style="font-size: 18px;" class="subtitle">Tell your idea and inspire others 💬</p>
+    </div>
+    <div class="row" style="background-color: var(--beige-brown); padding: 15px; border-radius: 12px;">
+        <form id="uploadForm" action="/api/posts/addpost" method="POST" enctype="multipart/form-data">
+      
+            <!-- Post Title -->
+            <div class="input-field">
+              <input type="text" name="title" id="title" class="text-main" placeholder="Title..." required>
+              <label for="title" style="color: var(--green-gold)">Post Title</label>
+            </div>
+
+            <!-- File Upload (Post Cover) -->
+            <div class="input-field">
+                <label for="media" style="color: var(--green-gold)">Upload a Photo for your Post Cover</label></br></br>
+                <input type="file" name="cover_pic" id="media" style="background-color: var(--beige-brown);" accept=".jpg, .jpeg, .png"> 
+              </div>
+      
+            <!-- Post Description -->
+            <div class="input-field">
+              <label for="description" style="color: var(--green-gold)">Story / Description</label>
+              <textarea name="description" id="description" class="materialize-textarea" placeholder="Description...." style="color: var(--main-color);" rows="6" required></textarea>
+            </div>
+
+            <!-- Category Dropdown -->
+            <div class="input-field">
+                <select name="category" id="post-category" required>
+                  <option value="" disabled selected>Choose a Category</option>
+                  <option value="DIY Gifts">DIY Gifts</option>
+                  <option value="Wrapping Ideas">Wrapping Ideas</option>
+                  <option value="Eco-friendly Gifts">Eco-friendly Gifts</option>
+                  <option value="Seasonal Gifts">Seasonal Gifts</option>
+                </select>
+                <label for="category" style="color: var(--green-gold)">Select Category</label>
+            </div>
+            <!-- File Upload (Post Media)-->
+            <div class="input-field">
+              <label for="media" style="color: var(--green-gold)">Optional: Upload a Photo or Video</label></br></br>
+              <input type="file" name="media" id="media" style="background-color: var(--beige-brown);" accept=".jpg, .jpeg, .png, .mp4"> 
+            </div>
+            <div class="input-field">
+              <label>
+                <input type="checkbox" name="notifcheckbox" id="notifcheckbox" class="filled-in" checked="checked" />
+                <span style="color:black">Get Likes Notification</span>
+              </label>
+            </div></br></br></br>
+            <!-- Submit Button -->
+            <button type="submit" id="btn-primary-glow" class="btn-primary">📤 Share Post</button>
+          </form>
+    </div>
+  </div>
+
+<!-- Page-specific JS here -->
+<script src="/js/post.js"></script>
+
+<!-- Modal Structure -->
+<div id="success-modal" class="modal">
+    <div class="modal-content">
+      <h4>Success</h4>
+      <p>Your post was shared successfully!</p>
+    </div>
+    <div class="modal-footer">
+      <a href="#!" class="modal-close waves-effect waves-green btn-flat">Close</a>
+    </div>
+  </div>
+  
+  <div id="error-modal" class="modal">
+    <div class="modal-content">
+      <h4>Error</h4>
+      <p>Something went wrong. Please try again.</p>
+    </div>
+    <div class="modal-footer">
+      <a href="#!" class="modal-close waves-effect waves-red btn-flat">Close</a>
+    </div>
+  </div>
+  
+
+<%- include('components/footer') %>

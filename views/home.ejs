@@ -1,45 +1,48 @@
-<%- include('components/header', { title, user }) %>
+<%- include('components/header', { title,user}) %>
 
-  <section style="max-width: 600px; margin: 0 auto; padding: 20px;">
-    <h2 style="text-align: center; margin-bottom: 30px; color: #333;">Simple Calculator</h2>
-
-    <div id="simple-calculator" class="row valign-wrapper"
-      style="background: #f5f5f5; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-      <div class="input-field col s3">
-        <input type="number" id="num1" class="validate" placeholder="First Number">
+  <section>
+    <h2 style="color: var(--main-color);">Welcome to Giftzy!</h2>
+    <div class="row">
+      <div class="col m4">
+        <div class="card" style="background-color: var(--beige-brown);">
+          <div class="card-content">
+            <span class="card-title">Secret Angel Game</span>
+            <p>Secret Angel is a <b>real-time</b> game with a built-in chatroom where participants <b>anonymously
+                exchange gifts.</b>
+              Set a budget, invite players, and chat as the excitement builds. When the game ends, players receive an
+              <b>email notification</b> revealing their Secret Angel!
+            </p>
+          </div>
+          <div class="card-action">
+            <a href="http://localhost:3000/secretAngel" style="color: var(--green-gold);">Click Here to Play</a>
+          </div>
+        </div>
       </div>
-
-      <div class="input-field col s2">
-        <select id="operation" class="browser-default">
-          <option value="+" selected>+</option>
-          <option value="-">−</option>
-          <option value="*">×</option>
-          <option value="/">÷</option>
-        </select>
+      <div class="col m4">
+        <div class="card" style="background-color: var(--soft-pink);">
+          <div class="card-content">
+            <span class="card-title">Gift Ideas Community</span>
+            <p>Gift Ideas Community is here for you ! You can <b>create post</b> with any ideas about gift and get <b>real-time notification</b> if other users like your post. You can also <b>like other posts created by other users</b> and <b>see the tutorial image or video.</b></p>
+          </div>
+          <div class="card-action">
+            <a href="http://localhost:3000/communityMainPage" style="color: var(--main-color);">Click here to gift community</a>
+          </div>
+        </div>
       </div>
-
-      <div class="input-field col s3">
-        <input type="number" id="num2" class="validate" placeholder="Second Number">
-      </div>
-
-      <div class="col s2">
-        <a id="calculate-btn" class="waves-effect waves-light btn">=</a>
-      </div>
-
-      <div class="col s2">
-        <span id="result" style="font-weight: bold; font-size: 18px;">--</span>
+      <div class="col m4">
+        <div class="card" style="background-color: var(--beige-brown);">
+          <div class="card-content">
+            <span class="card-title">Card Title</span>
+            <p>I am a very simple card. I am good at containing small bits of information.
+              I am convenient because I require little markup to use effectively.</p>
+          </div>
+          <div class="card-action">
+            <a href="#" style="color: var(--green-gold);">This is a link</a>
+            <a href="#" style="color: var(--green-gold);">This is a link</a>
+          </div>
+        </div>
       </div>
     </div>
   </section>
-
-  <script>
-
-    document.addEventListener('DOMContentLoaded', function () {
-      var elems = document.querySelectorAll('select');
-      var instances = M.FormSelect.init(elems);
-    });
-  </script>
-
-  <script src="/js/calculator.js"></script>
 
   <%- include('components/footer') %>

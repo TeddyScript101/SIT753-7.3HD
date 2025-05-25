@@ -1,12 +1,15 @@
 const cookieParser = require('cookie-parser');
 const express = require('express');
 const path = require('path');
+const connectDB = require('./db');
 const routes = require('./routes');
+const passport = require('./middlewares/passport');
 const cors = require('cors');
 const http = require('http'); // Needed to create server for Socket.IO
 const socketIo = require('socket.io');
 const validateEnv = require('./helpers/validateEnv');
-// validateEnv();
+const secretAngelSocket = require("./sockets/secretAngelSocket");
+validateEnv();
 
 const app = express();
 const port = 3000;
@@ -21,10 +24,13 @@ app.use(
   }),
 );
 
+app.use(passport.initialize());
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: false }));
+
+connectDB();
 
 
 app.use('/', routes);
@@ -39,7 +45,16 @@ const io = socketIo(server, {
   }
 });
 io.on("connection", (socket) => {
-
+  console.log(`User connected: ${socket.id}`);
+  secretAngelSocket(io, socket);
 });
 
-module.exports = { app, server };
+
+module.exports = { app, server, io };
+
+
+if (require.main === module) {
+  server.listen(3000, () => {
+    console.log('Server running at http://localhost:3000');
+  });
+}
