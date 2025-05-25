@@ -42,58 +42,6 @@ pipeline {
             }
         }
 
-        // stage('Security Scan') {
-        //     steps {
-        //         script {
-        //             echo "Running Trivy scan on ${env.IMAGE_NAME}:${env.VERSION}"
-        //             sh "trivy image --exit-code 0 --severity CRITICAL,HIGH ${env.IMAGE_NAME}:${env.VERSION}"
-        //             sh 'npm audit --json > npm-audit.json || true'
-        //             archiveArtifacts artifacts: '*-report.json'
-        //         }
-        //     }
-        //     post {
-        //         failure {
-        //             script {
-        //                 sendFailureEmail('Security Scan')
-        //             }
-        //         }
-        //     }
-        // }
-
-        // stage('Test') {
-        //     steps {
-        //         echo 'Running Mocha Unit tests and Integration tests...'
-        //         script {
-        //             sh 'npm test'
-        //         }
-        //     }
-        //     post {
-        //         always {
-        //             echo 'Test stage cleanup'
-        //         }
-        //         failure {
-        //             script {
-        //                 sendFailureEmail('Test')
-        //             }
-        //         }
-        //     }
-        // }
-
-        // stage('SonarQube Analysis') {
-        //     steps {
-        //         withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
-        //             sh 'npm run sonar'
-        //         }
-        //     }
-        //     post {
-        //         failure {
-        //             script {
-        //                 sendFailureEmail('SonarQube Analysis')
-        //             }
-        //         }
-        //     }
-        // }
-
         stage('Push to Docker Hub') {
             steps {
                 script {
@@ -142,77 +90,96 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(
-                credentialsId: 'git-creds',
-                usernameVariable: 'GIT_USER',
-                passwordVariable: 'GIT_TOKEN'
-            )]) {
+                        credentialsId: 'git-creds',
+                        usernameVariable: 'GIT_USER',
+                        passwordVariable: 'GIT_TOKEN'
+                    )]) {
                         sh """
-                    git config --global user.email "jenkins@example.com"
-                    git config --global user.name "Jenkins"
-                    git tag -a "v${env.VERSION}" -m "Release ${env.VERSION} via Jenkins"
-                    git push "https://${GIT_USER}:${GIT_TOKEN}@github.com/your-repo.git" "v${env.VERSION}"
-                """
+                            git config --global user.email "jenkins@example.com"
+                            git config --global user.name "Jenkins"
+                            git tag -a "v${env.VERSION}" -m "Release ${env.VERSION} via Jenkins"
+                            git push "https://${GIT_USER}:${GIT_TOKEN}@github.com/TeddyScript101/SIT753-7.3HD.git" "v${env.VERSION}"
+                        """
                         echo "Git tag 'v${env.VERSION}' created and pushed."
-            }
+                    }
 
-                    // 2. Docker Hub Promotion (Staging -> Prod)
                     withCredentials([usernamePassword(
-                credentialsId: 'dockerhub-creds',
-                usernameVariable: 'DOCKER_USER',
-                passwordVariable: 'DOCKER_PASS'
-            )]) {
+                        credentialsId: 'dockerhub-creds',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )]) {
                         sh """
-                    echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
-                    docker tag ${env.IMAGE_NAME}:${env.VERSION} ${env.IMAGE_NAME}:prod
-                    docker push ${env.IMAGE_NAME}:prod
-                    echo "Docker image promoted to 'prod' tag in Docker Hub."
-                """
-            }
+                            echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
+                            docker tag ${env.IMAGE_NAME}:${env.VERSION} ${env.IMAGE_NAME}:prod
+                            docker push ${env.IMAGE_NAME}:prod
+                            echo "Docker image promoted to 'prod' tag in Docker Hub."
+                        """
+                    }
+
+                    def releaseVerified = false
+                    def maxAttempts = 5
+                    def waitTime = 10
+
+                    for (int i = 0; i < maxAttempts; i++) {
+                        try {
+                            sh "git ls-remote --tags origin | grep -q 'refs/tags/v${env.VERSION}'"
+                            sh """
+                                docker pull ${env.IMAGE_NAME}:prod
+                                docker inspect ${env.IMAGE_NAME}:prod
+                            """
+                            sh 'curl --fail https://your-prod-url.com/health'
+                            releaseVerified = true
+                            break
+                        } catch (Exception e) {
+                            echo "Release verification attempt ${i+1} failed. Retrying..."
+                            sleep(waitTime)
+                        }
+                    }
+
+                    if (!releaseVerified) {
+                        error "Release verification failed after ${maxAttempts} attempts"
+                    }
                 }
             }
             post {
                 failure {
-                    sendFailureEmail('Release')
+                    script {
+                        sendFailureEmail('Release')
+                    }
                 }
             }
         }
 
         stage('Monitoring') {
             steps {
+                script {
+                    sh '''
+                        # Stop ALL containers using port 19999 (including ancestors)
+                        docker ps -aq --filter "publish=19999" | xargs -r docker rm -f || true
+                        docker ps -aq --filter "name=netdata" | xargs -r docker rm -f || true
+                        docker network prune -f || true
+                        docker volume rm -f netdataconfig netdatalib netdatacache || true
+                    '''
 
-            sh '''
-                # Stop ALL containers using port 19999 (including ancestors)
-                docker ps -aq --filter "publish=19999" | xargs -r docker rm -f || true
-
-                # Remove any lingering netdata containers (including stopped ones)
-                docker ps -aq --filter "name=netdata" | xargs -r docker rm -f || true
-
-                # Clean up networks that might be holding references
-                docker network prune -f || true
-
-                # Remove orphaned volumes
-                docker volume rm -f netdataconfig netdatalib netdatacache || true
-            '''
-
-            sleep 5
+                    sleep 5
 
                     sh '''
-                docker run -d \
-                  --name=netdata \
-                  -p 19999:19999 \
-                  -v netdataconfig:/etc/netdata \
-                  -v netdatalib:/var/lib/netdata \
-                  -v netdatacache:/var/cache/netdata \
-                  -v /etc/passwd:/host/etc/passwd:ro \
-                  -v /etc/group:/host/etc/group:ro \
-                  -v /proc:/host/proc:ro \
-                  -v /sys:/host/sys:ro \
-                  -v /etc/os-release:/host/etc/os-release:ro \
-                  -v /var/run/docker.sock:/var/run/docker.sock:ro \
-                  --cap-add SYS_PTRACE \
-                  --security-opt apparmor=unconfined \
-                  netdata/netdata
-            '''
+                        docker run -d \
+                          --name=netdata \
+                          -p 19999:19999 \
+                          -v netdataconfig:/etc/netdata \
+                          -v netdatalib:/var/lib/netdata \
+                          -v netdatacache:/var/cache/netdata \
+                          -v /etc/passwd:/host/etc/passwd:ro \
+                          -v /etc/group:/host/etc/group:ro \
+                          -v /proc:/host/proc:ro \
+                          -v /sys:/host/sys:ro \
+                          -v /etc/os-release:/host/etc/os-release:ro \
+                          -v /var/run/docker.sock:/var/run/docker.sock:ro \
+                          --cap-add SYS_PTRACE \
+                          --security-opt apparmor=unconfined \
+                          netdata/netdata
+                    '''
 
                     def healthCheckPassed = false
                     def maxAttempts = 6
@@ -233,8 +200,8 @@ pipeline {
                     if (!healthCheckPassed) {
                         error "Health check failed after ${maxAttempts} attempts. Aborting pipeline."
                     }
+                }
             }
-        }
             post {
                 failure {
                     script {
@@ -242,8 +209,8 @@ pipeline {
                     }
                 }
             }
+        }
     }
-}
 
     post {
         failure {
@@ -266,7 +233,6 @@ pipeline {
     }
 }
 
-// Reusable failure email function per stage
 def sendFailureEmail(String stageName) {
     emailext subject: "FAILURE: ${stageName} - ${env.JOB_NAME} [${env.BUILD_NUMBER}]",
              body: """\
@@ -279,12 +245,10 @@ def sendFailureEmail(String stageName) {
              to: "${env.EMAIL_RECIPIENTS}"
 }
 
-// Reusable success email function
 def sendSuccessEmail() {
     emailext subject: "SUCCESS: ${env.JOB_NAME} [${env.BUILD_NUMBER}]",
              body: """\
              The Jenkins pipeline completed successfully.
-
              Job: ${env.JOB_NAME}
              Build Number: ${env.BUILD_NUMBER}
              URL: ${env.BUILD_URL}
