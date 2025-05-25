@@ -1,25 +1,7 @@
-version: "3"
-services:
-  prometheus:
-    image: prom/prometheus
-    ports: ["9090:9090"]
-    volumes:
-      - "prometheus_data:/prometheus"
-      - "./prometheus.yml:/etc/prometheus/prometheus.yml"
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--storage.tsdb.path=/prometheus"
+global:
+  scrape_interval: 15s
 
-  grafana:
-    image: grafana/grafana
-    ports: ["3000:3000"]
-    volumes:
-      - "grafana_data:/var/lib/grafana"
-    depends_on: ["prometheus"]
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
-
-volumes:
-  prometheus_data:
-  grafana_data:
+scrape_configs:
+  - job_name: "node-app"
+    static_configs:
+      - targets: ["app:3000"]
