@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        git 'Default'
+        git 'System-Git'
     }
 
     environment {
