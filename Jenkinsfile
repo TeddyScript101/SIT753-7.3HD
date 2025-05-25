@@ -35,41 +35,6 @@ pipeline {
             }
         }
 
-        // stage('Security Scan') {
-        //     steps {
-        //         script {
-        //             echo "Running Trivy scan on ${env.IMAGE_NAME}:${env.VERSION}"
-        //             sh "trivy image --exit-code 0 --severity CRITICAL,HIGH ${env.IMAGE_NAME}:${env.VERSION}"
-
-        //             sh 'npm audit --json > npm-audit.json || true'
-
-        //             archiveArtifacts artifacts: '*-report.json'
-        //         }
-        //     }
-        // }
-
-        // stage('Test') {
-        //     steps {
-        //         echo 'Running Mocha Unit tests and Integration tests...'
-        //         script {
-        //             sh 'npm test'
-        //         }
-        //     }
-        //     post {
-        //         always {
-        //             echo 'Test stage cleanup'
-        //         }
-        //     }
-        // }
-
-            //     stage('SonarQube Analysis') {
-            // steps {
-            //     withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
-            //         sh 'npm run sonar'
-            //     }
-            // }
-            //     }
-
         stage('Push to Docker Hub') {
             steps {
                 script {
@@ -99,24 +64,31 @@ pipeline {
                 }
             }
         }
+
         stage('Monitoring') {
             steps {
-                echo 'Deploying Monitoring Stack...'
+                echo 'Deploying Netdata Monitoring Stack...'
                 script {
                     sh '''
-                echo "Checking prometheus.yml..."
-                if [ ! -f prometheus.yml ]; then
-                    echo "ERROR: prometheus.yml not found or is not a file!"
-                    exit 1
-                fi
+                        echo "Bringing up Netdata container..."
+                        docker ps | grep netdata && docker rm -f netdata || true
 
-                echo "Directory listing for debug:"
-                pwd && ls -la
-
-                echo "Deploying monitoring services..."
-                docker-compose -f docker-compose-monitoring.yml down --remove-orphans || true
-                docker-compose -f docker-compose-monitoring.yml up -d
-            '''
+                        docker run -d \
+                          --name=netdata \
+                          -p 19999:19999 \
+                          -v netdataconfig:/etc/netdata \
+                          -v netdatalib:/var/lib/netdata \
+                          -v netdatacache:/var/cache/netdata \
+                          -v /etc/passwd:/host/etc/passwd:ro \
+                          -v /etc/group:/host/etc/group:ro \
+                          -v /proc:/host/proc:ro \
+                          -v /sys:/host/sys:ro \
+                          -v /etc/os-release:/host/etc/os-release:ro \
+                          -v /var/run/docker.sock:/var/run/docker.sock:ro \
+                          --cap-add SYS_PTRACE \
+                          --security-opt apparmor=unconfined \
+                          netdata/netdata
+                    '''
                 }
             }
         }
