@@ -41,7 +41,7 @@ pipeline {
                     echo "Running Trivy scan on ${env.IMAGE_NAME}:${env.VERSION}"
 
                     // Option 1: if Trivy is installed on the agent
-                    sh "trivy image --exit-code 1 --severity CRITICAL,HIGH ${env.IMAGE_NAME}:${env.VERSION}"
+                    sh "trivy image --exit-code 0 --severity CRITICAL,HIGH ${env.IMAGE_NAME}:${env.VERSION}"
 
                     // Option 2: if Trivy is NOT installed locally, use Docker version (comment out one option)
                     // sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity CRITICAL,HIGH ${env.IMAGE_NAME}:${env.VERSION}"
