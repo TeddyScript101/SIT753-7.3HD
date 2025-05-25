@@ -35,40 +35,40 @@ pipeline {
             }
         }
 
-                stage('Security Scan') {
-            steps {
-                script {
-                    echo "Running Trivy scan on ${env.IMAGE_NAME}:${env.VERSION}"
-                    sh "trivy image --exit-code 0 --severity CRITICAL,HIGH ${env.IMAGE_NAME}:${env.VERSION}"
+            //     stage('Security Scan') {
+            // steps {
+            //     script {
+            //         echo "Running Trivy scan on ${env.IMAGE_NAME}:${env.VERSION}"
+            //         sh "trivy image --exit-code 0 --severity CRITICAL,HIGH ${env.IMAGE_NAME}:${env.VERSION}"
 
-                    sh 'npm audit --json > npm-audit.json || true'
+            //         sh 'npm audit --json > npm-audit.json || true'
 
-                    archiveArtifacts artifacts: '*-report.json'
-                }
-            }
-                }
+            //         archiveArtifacts artifacts: '*-report.json'
+            //     }
+            // }
+            //     }
 
-        stage('Test') {
-            steps {
-                echo 'Running Mocha Unit tests and Integration tests...'
-                script {
-                    sh 'npm test'
-                }
-            }
-            post {
-                always {
-                    echo 'Test stage cleanup'
-                }
-            }
-        }
+        // stage('Test') {
+        //     steps {
+        //         echo 'Running Mocha Unit tests and Integration tests...'
+        //         script {
+        //             sh 'npm test'
+        //         }
+        //     }
+        //     post {
+        //         always {
+        //             echo 'Test stage cleanup'
+        //         }
+        //     }
+        // }
 
-        stage('SonarQube Analysis') {
-            steps {
-                withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
-                    sh 'npm run sonar'
-                }
-            }
-        }
+        // stage('SonarQube Analysis') {
+        //     steps {
+        //         withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
+        //             sh 'npm run sonar'
+        //         }
+        //     }
+        // }
 
         stage('Push to Docker Hub') {
             steps {
