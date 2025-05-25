@@ -1,16 +1,9 @@
-version: "3.8"
 services:
   prometheus:
     image: prom/prometheus
     ports: ["9090:9090"]
     volumes:
-      - "prometheus_data:/prometheus"
       - "./prometheus.yml:/etc/prometheus/prometheus.yml"
-    networks:
-      - app-network
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--storage.tsdb.path=/prometheus"
 
   grafana:
     image: grafana/grafana
@@ -18,11 +11,6 @@ services:
     volumes:
       - "grafana_data:/var/lib/grafana"
     depends_on: ["prometheus"]
-    networks:
-      - app-network
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
 
 volumes:
-  prometheus_data:
   grafana_data:
