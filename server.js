@@ -3,9 +3,8 @@ const express = require('express');
 const path = require('path');
 const connectDB = require('./db');
 const routes = require('./routes');
-const passport = require('./middlewares/passport');
 const cors = require('cors');
-const http = require('http'); // Needed to create server for Socket.IO
+const http = require('http');
 const socketIo = require('socket.io');
 const validateEnv = require('./helpers/validateEnv');
 const secretAngelSocket = require("./sockets/secretAngelSocket");
@@ -24,7 +23,7 @@ app.use(
   }),
 );
 
-app.use(passport.initialize());
+
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));

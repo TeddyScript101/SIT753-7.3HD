@@ -7,30 +7,6 @@ const authMiddleware = require('../middlewares/authMiddleware');
 const signJWT = require('../helpers/signJWT');
 
 router.get('/', userController.getAllUsers);
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-
-router.get(
-  '/google/callback',
-  passport.authenticate('google', { session: false, failureRedirect: '/' }),
-  (req, res) => {
-    const token = signJWT({
-      id: req.user._id,
-      name: req.user.name,
-      email: req.user.email,
-      avatar: req.user.avatar,
-    });
-
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60 * 1000,
-      sameSite: 'lax',
-    });
-
-    res.redirect('/');
-  }
-);
-
 
 router.get('/logout', userController.logout);
 router.post('/login', userController.login);
