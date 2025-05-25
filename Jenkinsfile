@@ -102,23 +102,16 @@ pipeline {
         stage('Monitoring') {
             steps {
                 script {
-                    // Ensure prometheus.yml exists
-                    sh '''#!/bin/bash
-                if [ ! -f prometheus.yml ]; then
-                    cat > prometheus.yml <<'EOF'
-global:
-  scrape_interval: 15s
+                    // Debug: Show workspace contents
+                    sh 'pwd && ls -la'
 
-scrape_configs:
-  - job_name: "node-app"
-    static_configs:
-      - targets: ["app:3000"]
-EOF
-                fi
+                    // Verify prometheus.yml exists
+                    sh 'test -f prometheus.yml || (echo "ERROR: prometheus.yml missing!"; exit 1)'
 
-                # Use merged compose file or standalone monitoring file
-                docker-compose -f docker-compose.yml -f docker-compose-monitoring.yml down || true
-                docker-compose -f docker-compose.yml -f docker-compose-monitoring.yml up -d
+                    // Deploy with absolute path
+                    sh '''
+                docker-compose -f docker-compose-monitoring.yml down || true
+                docker-compose -f docker-compose-monitoring.yml up -d
             '''
                 }
             }
