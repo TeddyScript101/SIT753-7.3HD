@@ -42,6 +42,65 @@ pipeline {
             }
         }
 
+        stage('Security Scan') {
+            steps {
+                script {
+                    echo "Running Trivy scan on ${env.IMAGE_NAME}:${env.VERSION}"
+                    sh 'trivy --cache-dir /tmp/trivy-cache image --download-db-only'
+                    sh """
+                        trivy --cache-dir /tmp/trivy-cache image \
+                          --skip-update \
+                          --exit-code 0 \
+                          --severity CRITICAL,HIGH \
+                          ${env.IMAGE_NAME}:${env.VERSION}
+                    """
+                    sh 'npm audit --json > npm-audit.json || true'
+                    archiveArtifacts artifacts: '*-report.json'
+                }
+            }
+            post {
+                failure {
+                    script {
+                        sendFailureEmail('Security Scan')
+                    }
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo 'Running Mocha Unit tests and Integration tests...'
+                script {
+                    sh 'npm test'
+                }
+            }
+            post {
+                always {
+                    echo 'Test stage cleanup'
+                }
+                failure {
+                    script {
+                        sendFailureEmail('Test')
+                    }
+                }
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
+                    sh 'npm run sonar'
+                }
+            }
+            post {
+                failure {
+                    script {
+                        sendFailureEmail('SonarQube Analysis')
+                    }
+                }
+            }
+        }
+
         stage('Push to Docker Hub') {
             steps {
                 script {
@@ -75,6 +134,7 @@ pipeline {
                         docker-compose build
                         docker-compose up -d
                     '''
+                    sleep(time: 5, unit: 'SECONDS')
                 }
             }
             post {
@@ -89,34 +149,33 @@ pipeline {
         stage('Release') {
             steps {
                 script {
-                    // GitHub tagging and push
                     withCredentials([usernamePassword(
-                credentialsId: 'git-creds',
-                usernameVariable: 'GIT_USER',
-                passwordVariable: 'GIT_TOKEN'
-            )]) {
-                        sh '''
-                    git config --global user.email "jenkins@example.com"
-                    git config --global user.name "Jenkins"
-                    git tag -a "v${VERSION}" -m "Release ${VERSION} via Jenkins"
-                    git push "https://${GIT_USER}:${GIT_TOKEN}@github.com/TeddyScript101/SIT753-7.3HD.git" "v${VERSION}"
-                '''
-                        echo "Git tag 'v${env.VERSION}' created and pushed."
-            }
+                        credentialsId: 'git-creds',
+                        usernameVariable: 'GIT_USER',
+                        passwordVariable: 'GIT_TOKEN'
+                    )]) {
+                        sh """
+                            git config --global user.email "jenkins@example.com"
+                            git config --global user.name "Jenkins"
+                            git tag -a "release-${env.VERSION}" -m "Release ${env.VERSION} via Jenkins"
+                            git push "https://${GIT_USER}:${GIT_TOKEN}@github.com/TeddyScript101/SIT753-7.3HD.git" "release-${env.VERSION}"
+                        """
+                        echo "Git tag 'release-${env.VERSION}' created and pushed."
+                    }
 
                     // Docker image tagging and push
                     withCredentials([usernamePassword(
-                credentialsId: 'dockerhub-creds',
-                usernameVariable: 'DOCKER_USER',
-                passwordVariable: 'DOCKER_PASS'
-            )]) {
+                        credentialsId: 'dockerhub-creds',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )]) {
                         sh '''
-                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                    docker tag ${IMAGE_NAME}:${VERSION} ${IMAGE_NAME}:prod
-                    docker push ${IMAGE_NAME}:prod
-                '''
+                            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                            docker tag ${IMAGE_NAME}:${VERSION} ${IMAGE_NAME}:prod
+                            docker push ${IMAGE_NAME}:prod
+                        '''
                         echo "Docker image promoted to 'prod' tag in Docker Hub."
-            }
+                    }
 
                     // Release verification logic
                     def releaseVerified = false
@@ -127,13 +186,13 @@ pipeline {
                         try {
                             sh "git ls-remote --tags origin | grep -q 'refs/tags/v${env.VERSION}'"
                             sh '''
-                        docker pull ${IMAGE_NAME}:prod
-                        docker inspect ${IMAGE_NAME}:prod
-                    '''
+                                docker pull ${IMAGE_NAME}:prod
+                                docker inspect ${IMAGE_NAME}:prod
+                            '''
                             sh 'curl --fail http://host.docker.internal:3000/health'
                             releaseVerified = true
                             break
-                } catch (Exception e) {
+                        } catch (Exception e) {
                             echo "Release verification attempt ${i + 1} failed. Retrying in ${waitTime}s..."
                             sleep(time: waitTime, unit: 'SECONDS')
                         }
@@ -237,24 +296,32 @@ pipeline {
 }
 
 def sendFailureEmail(String stageName) {
-    emailext subject: "FAILURE: ${stageName} - ${env.JOB_NAME} [${env.BUILD_NUMBER}]",
-             body: """\
+    emailext(
+        subject: "FAILURE: ${stageName} - ${env.JOB_NAME} [${env.BUILD_NUMBER}]",
+        body: """\
              The '${stageName}' stage failed in Jenkins.
              Job: ${env.JOB_NAME}
              Build Number: ${env.BUILD_NUMBER}
              Stage: ${stageName}
              URL: ${env.BUILD_URL}
              """,
-             to: "${env.EMAIL_RECIPIENTS}"
+        to: "${env.EMAIL_RECIPIENTS}",
+        attachLog: true,
+        compressLog: true
+    )
 }
 
 def sendSuccessEmail() {
-    emailext subject: "SUCCESS: ${env.JOB_NAME} [${env.BUILD_NUMBER}]",
-             body: """\
-             The Jenkins pipeline completed successfully.
-             Job: ${env.JOB_NAME}
-             Build Number: ${env.BUILD_NUMBER}
-             URL: ${env.BUILD_URL}
-             """,
-             to: "${env.EMAIL_RECIPIENTS}"
+    emailext(
+        subject: "SUCCESS: ${env.JOB_NAME} [${env.BUILD_NUMBER}]",
+        body: """\
+            The Jenkins pipeline completed successfully.
+            Job: ${env.JOB_NAME}
+            Build Number: ${env.BUILD_NUMBER}
+            URL: ${env.BUILD_URL}
+            """,
+        to: "${env.EMAIL_RECIPIENTS}",
+        attachLog: true,
+        compressLog: true
+    )
 }
