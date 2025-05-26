@@ -150,32 +150,32 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(
-                        credentialsId: 'git-creds',
-                        usernameVariable: 'GIT_USER',
-                        passwordVariable: 'GIT_TOKEN'
-                    )]) {
+                credentialsId: 'git-creds',
+                usernameVariable: 'GIT_USER',
+                passwordVariable: 'GIT_TOKEN'
+            )]) {
                         sh """
-                            git config --global user.email "jenkins@example.com"
-                            git config --global user.name "Jenkins"
-                            git tag -a "release-${env.VERSION}" -m "Release ${env.VERSION} via Jenkins"
-                            git push "https://${GIT_USER}:${GIT_TOKEN}@github.com/TeddyScript101/SIT753-7.3HD.git" "release-${env.VERSION}"
-                        """
+                    git config --global user.email "jenkins@example.com"
+                    git config --global user.name "Jenkins"
+                    git tag "release-${env.VERSION}"
+                    git push "https://${GIT_USER}:${GIT_TOKEN}@github.com/TeddyScript101/SIT753-7.3HD.git" "release-${env.VERSION}"
+                """
                         echo "Git tag 'release-${env.VERSION}' created and pushed."
-                    }
+            }
 
                     // Docker image tagging and push
                     withCredentials([usernamePassword(
-                        credentialsId: 'dockerhub-creds',
-                        usernameVariable: 'DOCKER_USER',
-                        passwordVariable: 'DOCKER_PASS'
-                    )]) {
+                credentialsId: 'dockerhub-creds',
+                usernameVariable: 'DOCKER_USER',
+                passwordVariable: 'DOCKER_PASS'
+            )]) {
                         sh '''
-                            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                            docker tag ${IMAGE_NAME}:${VERSION} ${IMAGE_NAME}:prod
-                            docker push ${IMAGE_NAME}:prod
-                        '''
+                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                    docker tag ${IMAGE_NAME}:${VERSION} ${IMAGE_NAME}:prod
+                    docker push ${IMAGE_NAME}:prod
+                '''
                         echo "Docker image promoted to 'prod' tag in Docker Hub."
-                    }
+            }
 
                     // Release verification logic
                     def releaseVerified = false
@@ -184,15 +184,16 @@ pipeline {
 
                     for (int i = 0; i < maxAttempts; i++) {
                         try {
-                            sh "git ls-remote --tags origin | grep -q 'refs/tags/v${env.VERSION}'"
+                            // Fixed verification to match the actual tag format
+                            sh "git ls-remote --tags origin | grep -q 'refs/tags/release-${env.VERSION}'"
                             sh '''
-                                docker pull ${IMAGE_NAME}:prod
-                                docker inspect ${IMAGE_NAME}:prod
-                            '''
+                        docker pull ${IMAGE_NAME}:prod
+                        docker inspect ${IMAGE_NAME}:prod
+                    '''
                             sh 'curl --fail http://host.docker.internal:3000/health'
                             releaseVerified = true
                             break
-                        } catch (Exception e) {
+                } catch (Exception e) {
                             echo "Release verification attempt ${i + 1} failed. Retrying in ${waitTime}s..."
                             sleep(time: waitTime, unit: 'SECONDS')
                         }
@@ -200,13 +201,6 @@ pipeline {
 
                     if (!releaseVerified) {
                         error "Release verification failed after ${maxAttempts} attempts"
-                    }
-                }
-            }
-            post {
-                failure {
-                    script {
-                        sendFailureEmail('Release')
                     }
                 }
             }
