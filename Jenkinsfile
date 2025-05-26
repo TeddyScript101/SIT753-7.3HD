@@ -42,6 +42,36 @@ pipeline {
             }
         }
 
+        stage('Test') {
+            steps {
+                echo 'Running Mocha Unit tests and Integration tests...'
+                script {
+                    sh 'npm test'
+                }
+            }
+            post {
+                failure {
+                    script {
+                        sendFailureEmail('Test')
+                    }
+                }
+            }
+        }
+        stage('Code Quality') {
+            steps {
+                withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
+                    sh 'npm run sonar'
+                }
+            }
+            post {
+                failure {
+                    script {
+                        sendFailureEmail('SonarQube Analysis')
+                    }
+                }
+            }
+        }
+
         stage('Security Scan') {
             steps {
                 script {
@@ -65,41 +95,7 @@ pipeline {
                     }
                 }
             }
-        }
-
-        stage('Test') {
-            steps {
-                echo 'Running Mocha Unit tests and Integration tests...'
-                script {
-                    sh 'npm test'
                 }
-            }
-            post {
-                always {
-                    echo 'Test stage cleanup'
-                }
-                failure {
-                    script {
-                        sendFailureEmail('Test')
-                    }
-                }
-            }
-        }
-
-        stage('SonarQube Analysis') {
-            steps {
-                withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
-                    sh 'npm run sonar'
-                }
-            }
-            post {
-                failure {
-                    script {
-                        sendFailureEmail('SonarQube Analysis')
-                    }
-                }
-            }
-        }
 
         stage('Push to Docker Hub') {
             steps {
@@ -163,7 +159,6 @@ pipeline {
                         echo "Git tag 'release-${env.VERSION}' created and pushed."
             }
 
-                    // Docker image tagging and push
                     withCredentials([usernamePassword(
                 credentialsId: 'dockerhub-creds',
                 usernameVariable: 'DOCKER_USER',
@@ -177,14 +172,12 @@ pipeline {
                         echo "Docker image promoted to 'prod' tag in Docker Hub."
             }
 
-                    // Release verification logic
                     def releaseVerified = false
                     def maxAttempts = 5
                     def waitTime = 10
 
                     for (int i = 0; i < maxAttempts; i++) {
                         try {
-                            // Fixed verification to match the actual tag format
                             sh "git ls-remote --tags origin | grep -q 'refs/tags/release-${env.VERSION}'"
                             sh '''
                         docker pull ${IMAGE_NAME}:prod
@@ -271,14 +264,7 @@ pipeline {
     post {
         failure {
             script {
-                emailext subject: "PIPELINE FAILURE: ${env.JOB_NAME} [${env.BUILD_NUMBER}]",
-                         body: """\
-                         The Jenkins pipeline has failed.
-                         Job: ${env.JOB_NAME}
-                         Build Number: ${env.BUILD_NUMBER}
-                         URL: ${env.BUILD_URL}
-                         """,
-                         to: "${env.EMAIL_RECIPIENTS}"
+                sendFailureEmail('Pipeline Failure')
             }
         }
         success {
